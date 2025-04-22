@@ -97,4 +97,35 @@
   .efficiency-score-low {
     @apply bg-red-100 text-red-800 px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
+  
+  /* Add custom utility classes for our new color scheme */
+  .bg-presspage-blue {
+    @apply bg-[#122F4A];
+  }
+  
+  .text-presspage-blue {
+    @apply text-[#122F4A];
+  }
+
+  .border-presspage-blue {
+    @apply border-[#122F4A];
+  }
+  
+  /* Fix the Typography plugin's text color in dark backgrounds */
+  .prose-invert {
+    @apply text-white;
+  }
+  
+  .prose-invert h1, .prose-invert h2, .prose-invert h3,
+  .prose-invert h4, .prose-invert h5, .prose-invert h6 {
+    @apply text-white;
+  }
+  
+  .prose-invert a {
+    @apply text-blue-300;
+  }
+  
+  .prose-invert strong {
+    @apply text-white;
+  }
 }
