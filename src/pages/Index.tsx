@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -21,8 +22,7 @@ const Index = () => {
   const metrics = {
     totalAccounts: 127,
     activeTracking: 42,
-    averageDistributionTime: '2.3 hrs',
-    averageSerpPosition: '#4'
+    averageDistributionTime: '2.3 hrs'
   };
 
   return (
@@ -75,7 +75,7 @@ const Index = () => {
         </div>
         
         {/* Key metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <MetricCard
             title="Total Accounts"
             value={metrics.totalAccounts}
@@ -91,12 +91,6 @@ const Index = () => {
             title="Avg. Distribution Time"
             value={metrics.averageDistributionTime}
             className="border-l-4 border-yellow-500"
-          />
-          <MetricCard
-            title="Avg. SERP Position"
-            value={metrics.averageSerpPosition}
-            className="border-l-4 border-green-500"
-            valueClassName="text-green-600"
           />
         </div>
         

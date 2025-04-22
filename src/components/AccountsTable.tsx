@@ -119,7 +119,7 @@ export const AccountsTable = () => {
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
                   <StatusIndicator status={account.status} />
-                  <span className="ml-2 font-medium">{account.name}</span>
+                  <span className="ml-2 font-semibold text-gray-900">{account.name}</span>
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
