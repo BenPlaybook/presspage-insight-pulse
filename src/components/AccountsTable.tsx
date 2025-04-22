@@ -1,4 +1,8 @@
 import { Link } from 'react-router-dom';
+import { Account } from '@/types/accounts';
+import { StatusIndicator } from './accounts/StatusIndicator';
+import { PublicationsDistribution } from './accounts/PublicationsDistribution';
+import { AccountsTableHeader } from './accounts/AccountsTableHeader';
 
 type Account = {
   id: string;
@@ -128,40 +132,12 @@ export const AccountsTable = () => {
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-presspage-blue text-white">
-          <tr>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Account
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Status
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Date Added
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Avg. Speed
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              PR & Comms Headcount
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Publications (30d)
-            </th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
+        <AccountsTableHeader />
         <tbody className="bg-white divide-y divide-gray-200">
           {accounts.map((account) => (
             <tr key={account.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <div className="h-2.5 w-2.5 rounded-full mr-2" 
-                       style={{ backgroundColor: account.status === 'Active' ? '#00A99D' : '#FFB547' }} />
-                  <div className="font-medium text-gray-900">{account.name}</div>
-                </div>
+                <StatusIndicator status={account.status} />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className={`status-${account.status.toLowerCase()}`}>{account.status}</span>
@@ -176,38 +152,10 @@ export const AccountsTable = () => {
                 {account.headcount}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900">
-                    {account.publications.financial.last30Days + account.publications.nonFinancial.last30Days}
-                  </span>
-                  <div className="flex-1 h-2 bg-gray-200 rounded">
-                    <div 
-                      className="h-full rounded" 
-                      style={{ 
-                        width: `${(account.publications.financial.last30Days / (account.publications.financial.last30Days + account.publications.nonFinancial.last30Days)) * 100}%`,
-                        backgroundColor: '#F2FCE2'
-                      }}
-                    />
-                    <div 
-                      className="h-full rounded" 
-                      style={{ 
-                        width: `${(account.publications.nonFinancial.last30Days / (account.publications.financial.last30Days + account.publications.nonFinancial.last30Days)) * 100}%`,
-                        backgroundColor: '#F1F0FB',
-                        marginTop: '-8px'
-                      }}
-                    />
-                  </div>
-                  <div className="flex gap-2 text-xs">
-                    <span className="flex items-center">
-                      <div className="w-2 h-2 rounded-full mr-1" style={{backgroundColor: '#F2FCE2'}} />
-                      Financial: {account.publications.financial.last30Days}
-                    </span>
-                    <span className="flex items-center">
-                      <div className="w-2 h-2 rounded-full mr-1" style={{backgroundColor: '#F1F0FB'}} />
-                      Non-Financial: {account.publications.nonFinancial.last30Days}
-                    </span>
-                  </div>
-                </div>
+                <PublicationsDistribution 
+                  financial={account.publications.financial.last30Days}
+                  nonFinancial={account.publications.nonFinancial.last30Days}
+                />
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <Link to={`/account/${account.id}`} className="bg-presspage-teal text-white px-3 py-1 rounded text-xs">
