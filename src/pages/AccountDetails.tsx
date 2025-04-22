@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MetricCard } from '@/components/MetricCard';
 import { PublicationTimeline } from '@/components/PublicationTimeline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AISummary from '@/components/AISummary';
 
 // Mock account data
 const accountData = {
@@ -31,11 +31,28 @@ const accountData = {
       description: 'Active channels'
     }
   },
-  aiSummary: `Shopify displays strong publication efficiency with an average distribution time of 1.5 hours. Key opportunities:
-  • Optimizing social media distribution timing (currently 2.3 hours delay on Twitter)
-  • Expanding newsroom coverage for product updates (currently underutilized)
-  • Leveraging LinkedIn for enterprise announcements (25% of content not distributed)
-  `
+  aiSummary: {
+    internal: `### Key Performance Insights
+* Distribution efficiency at 1.5 hours average - **20% improvement** from last month
+* Twitter channel showing 2.3 hours delay - requires optimization
+* Product updates coverage gap in newsroom (40% below target)
+* Enterprise announcement distribution on LinkedIn at 75% - needs improvement
+
+### Action Items
+1. Optimize social media scheduling
+2. Increase newsroom product coverage
+3. Review LinkedIn distribution strategy`,
+    customer: `### Performance Overview
+* Consistently fast distribution across channels
+* Strong social media presence with multi-channel coverage
+* Comprehensive newsroom content strategy
+* Effective enterprise announcement distribution
+
+### Opportunities
+* Enhanced social media timing optimization
+* Expanded product update coverage
+* Strengthened LinkedIn presence`
+  }
 };
 
 const AccountDetails = () => {
@@ -94,11 +111,11 @@ const AccountDetails = () => {
         </div>
         
         {/* AI Summary */}
-        <div className="bg-presspage-blue text-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-medium mb-3">AI Summary</h2>
-          <div className="whitespace-pre-line text-sm">
-            {accountData.aiSummary}
-          </div>
+        <div className="mb-6">
+          <AISummary 
+            internalSummary={accountData.aiSummary.internal}
+            customerSummary={accountData.aiSummary.customer}
+          />
         </div>
         
         {/* Tabs */}
