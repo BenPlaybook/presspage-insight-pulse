@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 
-// Updated type definition
 type Account = {
   id: string;
   name: string;
@@ -22,7 +21,6 @@ type Account = {
   };
 };
 
-// Updated mock data
 const accounts: Account[] = [
   {
     id: '1',
@@ -184,11 +182,30 @@ export const AccountsTable = () => {
                   </span>
                   <div className="flex-1 h-2 bg-gray-200 rounded">
                     <div 
-                      className="h-full bg-presspage-teal rounded" 
+                      className="h-full rounded" 
                       style={{ 
-                        width: `${(account.publications.financial.last30Days / (account.publications.financial.last30Days + account.publications.nonFinancial.last30Days)) * 100}%` 
+                        width: `${(account.publications.financial.last30Days / (account.publications.financial.last30Days + account.publications.nonFinancial.last30Days)) * 100}%`,
+                        backgroundColor: '#F2FCE2'
                       }}
                     />
+                    <div 
+                      className="h-full rounded" 
+                      style={{ 
+                        width: `${(account.publications.nonFinancial.last30Days / (account.publications.financial.last30Days + account.publications.nonFinancial.last30Days)) * 100}%`,
+                        backgroundColor: '#F1F0FB',
+                        marginTop: '-8px'
+                      }}
+                    />
+                  </div>
+                  <div className="flex gap-2 text-xs">
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 rounded-full mr-1" style={{backgroundColor: '#F2FCE2'}} />
+                      Financial: {account.publications.financial.last30Days}
+                    </span>
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 rounded-full mr-1" style={{backgroundColor: '#F1F0FB'}} />
+                      Non-Financial: {account.publications.nonFinancial.last30Days}
+                    </span>
                   </div>
                 </div>
               </td>
