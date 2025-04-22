@@ -43,25 +43,6 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
     onSearchChange(e.target.value);
   };
 
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    const newDate = {
-      from: date.from,
-      to: date.to
-    };
-    
-    if (!date.from) {
-      newDate.from = selectedDate;
-    } else if (!date.to && selectedDate && selectedDate >= date.from) {
-      newDate.to = selectedDate;
-    } else {
-      newDate.from = selectedDate;
-      newDate.to = undefined;
-    }
-
-    setDate(newDate);
-    onDateRangeChange(newDate);
-  };
-
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center mb-6">
       <div className="relative flex-1">
@@ -81,10 +62,10 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
             <SelectItem value="analyzing">Analyzing</SelectItem>
-            <SelectItem value="matched">Matched</SelectItem>
-            <SelectItem value="distributed">Distributed</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
           </SelectContent>
         </Select>
         
@@ -121,10 +102,12 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
               initialFocus
               mode="range"
               defaultMonth={date.from}
-              selected={{ from: date.from, to: date.to }}
+              selected={date}
               onSelect={(selectedDate) => {
-                setDate(selectedDate || { from: undefined, to: undefined });
-                onDateRangeChange(selectedDate || { from: undefined, to: undefined });
+                // Handle the case where selectedDate might be null
+                const newDate = selectedDate || { from: undefined, to: undefined };
+                setDate(newDate);
+                onDateRangeChange(newDate);
               }}
               numberOfMonths={1}
               className="pointer-events-auto"

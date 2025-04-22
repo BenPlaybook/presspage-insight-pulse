@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { Account } from '@/types/accounts';
 import { StatusIndicator } from './accounts/StatusIndicator';
@@ -116,7 +117,10 @@ export const AccountsTable = () => {
           {accounts.map((account) => (
             <tr key={account.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
-                <StatusIndicator status={account.status} />
+                <div className="flex items-center">
+                  <StatusIndicator status={account.status} />
+                  <span className="ml-2 font-medium">{account.name}</span>
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className={`status-${account.status.toLowerCase()}`}>{account.status}</span>
