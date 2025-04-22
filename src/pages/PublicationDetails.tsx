@@ -2,17 +2,11 @@ import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MetricCard } from '@/components/MetricCard';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Twitter, Linkedin, Clock, CircleCheck, CircleX } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DistributionTimeline } from '@/components/publications/DistributionTimeline';
+import { SerpResultsTable } from '@/components/publications/SerpResultsTable';
+import { SocialCoverageTable } from '@/components/publications/SocialCoverageTable';
 import { Publication } from '@/types/publications';
 
 // Mock publication data (we would fetch this based on ID in a real app)
@@ -117,72 +111,6 @@ const mockPublication: Publication = {
   }
 };
 
-const DistributionTimeline: React.FC<{ publication: Publication }> = ({ publication }) => {
-  const platforms = publication.socialCoverage.platforms;
-  const sortedPlatforms = platforms.sort((a, b) => {
-    if (!a.matched) return 1;
-    if (!b.matched) return -1;
-    return parseFloat(a.timeDifference) - parseFloat(b.timeDifference);
-  });
-  
-  return (
-    <div className="py-4">
-      <h3 className="text-lg font-medium mb-4">Distribution Timeline</h3>
-      
-      <div className="relative">
-        {/* Timeline line */}
-        <div className="absolute left-0 top-0 h-full w-0.5 bg-gray-200"></div>
-        
-        {/* Original publication */}
-        <div className="relative pl-8 pb-6">
-          <div className="absolute left-0 top-0 w-5 h-5 rounded-full bg-[#122F4A] flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-white"></div>
-          </div>
-          <div>
-            <p className="font-medium">Original Publication</p>
-            <p className="text-sm text-gray-500">
-              {new Date(publication.detectedDate).toLocaleString()}
-            </p>
-          </div>
-        </div>
-        
-        {/* Platform distribution */}
-        {sortedPlatforms.map((platform, index) => (
-          platform.matched && (
-            <div key={platform.platform} className="relative pl-8 pb-6">
-              <div className="absolute left-0 top-0 w-5 h-5 rounded-full bg-presspage-teal flex items-center justify-center">
-                {platform.platform === 'Twitter' && <Twitter size={12} color="white" />}
-                {platform.platform === 'LinkedIn' && <Linkedin size={12} color="white" />}
-              </div>
-              <div>
-                <p className="font-medium">{platform.platform}</p>
-                <p className="text-sm text-gray-500">
-                  {platform.postDate} ({platform.timeDifference} after publication)
-                </p>
-              </div>
-            </div>
-          )
-        ))}
-        
-        {/* Newswire distribution */}
-        {publication.newswireDistribution?.map((newswire, index) => (
-          <div key={index} className="relative pl-8 pb-6">
-            <div className="absolute left-0 top-0 w-5 h-5 rounded-full bg-green-600 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-white"></div>
-            </div>
-            <div>
-              <p className="font-medium">{newswire.service}</p>
-              <p className="text-sm text-gray-500">
-                {newswire.time} • Potential Reach: {newswire.reach.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
   const [activeTab, setActiveTab] = useState('overview');
@@ -267,38 +195,7 @@ const PublicationDetails = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-4">SERP Results</h3>
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Region</TableHead>
-                      <TableHead>Position</TableHead>
-                      <TableHead>Detected Date</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockPublication.serpResults.map((result, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{result.region}</TableCell>
-                        <TableCell>{`#${result.position}`}</TableCell>
-                        <TableCell>{new Date(result.detected).toLocaleDateString()}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{result.url}</TableCell>
-                        <TableCell className="text-right">
-                          <a 
-                            href={result.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-presspage-teal hover:text-opacity-80"
-                          >
-                            View
-                          </a>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <SerpResultsTable results={mockPublication.serpResults} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -307,73 +204,7 @@ const PublicationDetails = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-4">Social Media Coverage</h3>
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Time Difference</TableHead>
-                      <TableHead>Post Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockPublication.socialCoverage.platforms.map((platform, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {platform.platform === 'Twitter' && (
-                              <div className="bg-blue-400 p-1 rounded">
-                                <Twitter size={16} color="white" />
-                              </div>
-                            )}
-                            {platform.platform === 'LinkedIn' && (
-                              <div className="bg-blue-700 p-1 rounded">
-                                <Linkedin size={16} color="white" />
-                              </div>
-                            )}
-                            {platform.platform}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {platform.matched ? (
-                            <div className="flex items-center gap-1 text-green-600">
-                              <CircleCheck size={16} />
-                              <span>Matched</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1 text-red-500">
-                              <CircleX size={16} />
-                              <span>Not Found</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {platform.matched ? (
-                            <div className="flex items-center gap-1">
-                              <Clock size={16} className="text-gray-400" />
-                              <span>{platform.timeDifference}</span>
-                            </div>
-                          ) : 'N/A'}
-                        </TableCell>
-                        <TableCell>{platform.matched ? platform.postDate : 'N/A'}</TableCell>
-                        <TableCell className="text-right">
-                          {platform.matched && (
-                            <a 
-                              href={platform.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-presspage-teal hover:text-opacity-80"
-                            >
-                              View
-                            </a>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <SocialCoverageTable platforms={mockPublication.socialCoverage.platforms} />
               </CardContent>
             </Card>
           </TabsContent>
