@@ -4,27 +4,6 @@ import { StatusIndicator } from './accounts/StatusIndicator';
 import { PublicationsDistribution } from './accounts/PublicationsDistribution';
 import { AccountsTableHeader } from './accounts/AccountsTableHeader';
 
-type Account = {
-  id: string;
-  name: string;
-  status: 'Active' | 'Processing';
-  dateAdded: string;
-  avgSpeed: string;
-  headcount: number;
-  publications: {
-    financial: {
-      last30Days: number;
-      last90Days: number;
-      lastYear: number;
-    };
-    nonFinancial: {
-      last30Days: number;
-      last90Days: number;
-      lastYear: number;
-    };
-  };
-};
-
 const accounts: Account[] = [
   {
     id: '1',
