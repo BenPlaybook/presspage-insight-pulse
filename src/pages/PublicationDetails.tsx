@@ -20,26 +20,12 @@ import { Publication } from '@/types/publications';
 const mockPublication: Publication = {
   id: '101',
   title: 'Q3 2024 Financial Results',
-  status: 'Completed',
+  status: 'Published',
   detectedDate: '2025-01-15',
   classification: 'Financial',
   serpPosition: {
     na: 1,
     eu: 3
-  },
-  trackingPeriod: {
-    start: '2025-01-15',
-    end: '2025-02-15'
-  },
-  socialMatches: {
-    twitter: {
-      matched: true,
-      timeDifference: '0.8 hrs'
-    },
-    linkedin: {
-      matched: true,
-      timeDifference: '1.2 hrs'
-    }
   },
   socialCoverage: {
     matched: 3,
@@ -72,36 +58,19 @@ const mockPublication: Publication = {
   totalLocations: 3,
   content: 'Shopify Inc. (NYSE: SHOP) (TSX: SHOP), a provider of essential internet infrastructure for commerce, announced today its financial results for the quarter ended September 30, 2024.',
   source: 'shopify.com/news',
+  trackingPeriod: '30 days',
   serpResults: [
     {
       region: 'NA',
       position: 1,
       url: 'https://example.com/news/financial-results',
-      detected: '2025-01-15',
-      title: 'Shopify Q3 Financial Results',
-      articleDate: '2025-01-15',
-      matchStatus: 'Exact Match',
-      confidence: 'High',
-      reasoning: 'Exact match found on official domain',
-      domain: 'example.com',
-      searchQuery: 'Shopify Q3 2024',
-      searchType: 'General',
-      partialMatch: false
+      detected: '2025-01-15'
     },
     {
       region: 'EU',
       position: 3,
       url: 'https://example.eu/news/financial-results',
-      detected: '2025-01-15',
-      title: 'Shopify Q3 Financial Results - Europe',
-      articleDate: '2025-01-15',
-      matchStatus: 'Exact Match',
-      confidence: 'High',
-      reasoning: 'Exact match found on official domain',
-      domain: 'example.eu',
-      searchQuery: 'Shopify Q3 2024',
-      searchType: 'General',
-      partialMatch: false
+      detected: '2025-01-15'
     }
   ],
   newswireDistribution: [

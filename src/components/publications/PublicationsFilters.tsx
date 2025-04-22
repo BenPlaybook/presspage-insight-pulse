@@ -18,7 +18,6 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
 
 interface PublicationsFiltersProps {
   onSearchChange: (search: string) => void;
@@ -34,16 +33,33 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
   onDateRangeChange
 }) => {
   const [search, setSearch] = React.useState('');
-  const [date, setDate] = React.useState<DateRange | undefined>({
+  const [date, setDate] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined
   });
 
-  const handleDateChange = (selectedDate: DateRange | undefined) => {
-    setDate(selectedDate);
-    if (selectedDate) {
-      onDateRangeChange(selectedDate);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    onSearchChange(e.target.value);
+  };
+
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    const newDate = {
+      from: date.from,
+      to: date.to
+    };
+    
+    if (!date.from) {
+      newDate.from = selectedDate;
+    } else if (!date.to && selectedDate && selectedDate >= date.from) {
+      newDate.to = selectedDate;
+    } else {
+      newDate.from = selectedDate;
+      newDate.to = undefined;
     }
+
+    setDate(newDate);
+    onDateRangeChange(newDate);
   };
 
   return (
@@ -53,10 +69,7 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
         <Input
           placeholder="Search publications..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            onSearchChange(e.target.value);
-          }}
+          onChange={handleSearchChange}
           className="pl-10"
         />
       </div>
@@ -68,10 +81,10 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="published">Published</SelectItem>
             <SelectItem value="analyzing">Analyzing</SelectItem>
-            <SelectItem value="in-progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="matched">Matched</SelectItem>
+            <SelectItem value="distributed">Distributed</SelectItem>
           </SelectContent>
         </Select>
         
@@ -90,7 +103,7 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-[150px] justify-start">
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date?.from ? (
+              {date.from ? (
                 date.to ? (
                   <>
                     {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
@@ -107,10 +120,14 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
             <Calendar
               initialFocus
               mode="range"
-              defaultMonth={date?.from}
-              selected={date}
-              onSelect={handleDateChange}
+              defaultMonth={date.from}
+              selected={{ from: date.from, to: date.to }}
+              onSelect={(selectedDate) => {
+                setDate(selectedDate || { from: undefined, to: undefined });
+                onDateRangeChange(selectedDate || { from: undefined, to: undefined });
+              }}
               numberOfMonths={1}
+              className="pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
