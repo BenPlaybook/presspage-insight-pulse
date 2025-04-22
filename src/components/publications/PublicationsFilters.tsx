@@ -38,30 +38,6 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
     to: undefined
   });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    onSearchChange(e.target.value);
-  };
-
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    const newDate = {
-      from: date.from,
-      to: date.to
-    };
-    
-    if (!date.from) {
-      newDate.from = selectedDate;
-    } else if (!date.to && selectedDate && selectedDate >= date.from) {
-      newDate.to = selectedDate;
-    } else {
-      newDate.from = selectedDate;
-      newDate.to = undefined;
-    }
-
-    setDate(newDate);
-    onDateRangeChange(newDate);
-  };
-
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center mb-6">
       <div className="relative flex-1">
@@ -69,7 +45,10 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
         <Input
           placeholder="Search publications..."
           value={search}
-          onChange={handleSearchChange}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            onSearchChange(e.target.value);
+          }}
           className="pl-10"
         />
       </div>
@@ -81,10 +60,10 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
             <SelectItem value="analyzing">Analyzing</SelectItem>
-            <SelectItem value="matched">Matched</SelectItem>
-            <SelectItem value="distributed">Distributed</SelectItem>
+            <SelectItem value="in-progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
           </SelectContent>
         </Select>
         
@@ -121,13 +100,14 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
               initialFocus
               mode="range"
               defaultMonth={date.from}
-              selected={{ from: date.from, to: date.to }}
+              selected={date}
               onSelect={(selectedDate) => {
-                setDate(selectedDate || { from: undefined, to: undefined });
-                onDateRangeChange(selectedDate || { from: undefined, to: undefined });
+                if (selectedDate) {
+                  setDate(selectedDate);
+                  onDateRangeChange(selectedDate);
+                }
               }}
               numberOfMonths={1}
-              className="pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
