@@ -1,4 +1,5 @@
-export type PublicationStatus = 'Analyzing' | 'In Progress' | 'Completed' | 'Pending';
+
+export type PublicationStatus = 'Analyzing' | 'In Progress' | 'Completed' | 'Pending' | 'Published' | 'Matched' | 'Distributed';
 
 export type SocialMatch = {
   platform: 'Twitter' | 'LinkedIn' | 'Facebook';
@@ -13,6 +14,18 @@ export type SerpResult = {
   position: number;
   url: string;
   detected: string;
+  title: string;
+  articleDate: string;
+  matchStatus: string;
+  confidence: 'High' | 'Medium' | 'Low';
+  reasoning: string;
+  domain: string;
+  notAMatchSocial?: boolean;
+  originalPublicationDate?: string;
+  publicationDateDiff?: number;
+  searchQuery: string;
+  searchType: string;
+  partialMatch: boolean;
 };
 
 export type Publication = {
@@ -55,20 +68,7 @@ export type Publication = {
   totalLocations: number;
   content?: string;
   source?: string;
-  serpResults: Array<SerpResult & {
-    title: string;
-    articleDate: string;
-    matchStatus: string;
-    confidence: 'High' | 'Medium' | 'Low';
-    reasoning: string;
-    domain: string;
-    notAMatchSocial?: boolean;
-    originalPublicationDate?: string;
-    publicationDateDiff?: number;
-    searchQuery: string;
-    searchType: string;
-    partialMatch: boolean;
-  }>;
+  serpResults: SerpResult[];
   newswireDistribution?: {
     service: string;
     time: string;
