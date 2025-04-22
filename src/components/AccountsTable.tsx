@@ -1,80 +1,127 @@
-
 import { Link } from 'react-router-dom';
 
-// Mock data type definitions
+// Updated type definition
 type Account = {
   id: string;
   name: string;
   status: 'Active' | 'Processing';
-  lastPublished: string;
+  dateAdded: string;
   avgSpeed: string;
-  serpPosition: number;
+  headcount: number;
   publications: {
-    count: number;
-    days: number;
+    financial: {
+      last30Days: number;
+      last90Days: number;
+      lastYear: number;
+    };
+    nonFinancial: {
+      last30Days: number;
+      last90Days: number;
+      lastYear: number;
+    };
   };
 };
 
-// Mock data
+// Updated mock data
 const accounts: Account[] = [
   {
     id: '1',
     name: 'Shopify',
     status: 'Active',
-    lastPublished: '2d ago',
+    dateAdded: '2024-01-15',
     avgSpeed: '1.5 hrs',
-    serpPosition: 3,
+    headcount: 12,
     publications: {
-      count: 47,
-      days: 30
+      financial: {
+        last30Days: 5,
+        last90Days: 15,
+        lastYear: 48
+      },
+      nonFinancial: {
+        last30Days: 42,
+        last90Days: 127,
+        lastYear: 412
+      }
     }
   },
   {
     id: '2',
     name: 'Lotus Cars',
     status: 'Processing',
-    lastPublished: '5d ago',
+    dateAdded: '2024-02-01',
     avgSpeed: '3.2 hrs',
-    serpPosition: 8,
+    headcount: 8,
     publications: {
-      count: 23,
-      days: 30
+      financial: {
+        last30Days: 3,
+        last90Days: 8,
+        lastYear: 32
+      },
+      nonFinancial: {
+        last30Days: 20,
+        last90Days: 68,
+        lastYear: 245
+      }
     }
   },
   {
     id: '3',
     name: 'Volvo',
     status: 'Active',
-    lastPublished: '1d ago',
+    dateAdded: '2024-03-10',
     avgSpeed: '0.8 hrs',
-    serpPosition: 1,
+    headcount: 10,
     publications: {
-      count: 62,
-      days: 30
+      financial: {
+        last30Days: 2,
+        last90Days: 5,
+        lastYear: 20
+      },
+      nonFinancial: {
+        last30Days: 15,
+        last90Days: 35,
+        lastYear: 120
+      }
     }
   },
   {
     id: '4',
     name: 'Tesla',
     status: 'Active',
-    lastPublished: '3d ago',
+    dateAdded: '2024-04-05',
     avgSpeed: '2.1 hrs',
-    serpPosition: 2,
+    headcount: 15,
     publications: {
-      count: 51,
-      days: 30
+      financial: {
+        last30Days: 4,
+        last90Days: 10,
+        lastYear: 40
+      },
+      nonFinancial: {
+        last30Days: 25,
+        last90Days: 55,
+        lastYear: 220
+      }
     }
   },
   {
     id: '5',
     name: 'Sony',
     status: 'Processing',
-    lastPublished: '4d ago',
+    dateAdded: '2024-05-01',
     avgSpeed: '3.8 hrs',
-    serpPosition: 6,
+    headcount: 12,
     publications: {
-      count: 19,
-      days: 30
+      financial: {
+        last30Days: 1,
+        last90Days: 3,
+        lastYear: 10
+      },
+      nonFinancial: {
+        last30Days: 10,
+        last90Days: 20,
+        lastYear: 100
+      }
     }
   }
 ];
@@ -92,16 +139,16 @@ export const AccountsTable = () => {
               Status
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Last Pub.
+              Date Added
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Avg. Speed
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              SERP Pos.
+              PR & Comms Headcount
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-              Publications
+              Publications (30d)
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Actions
@@ -122,21 +169,28 @@ export const AccountsTable = () => {
                 <span className={`status-${account.status.toLowerCase()}`}>{account.status}</span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {account.lastPublished}
+                {new Date(account.dateAdded).toLocaleDateString()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 {account.avgSpeed}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`text-sm font-medium ${
-                  account.serpPosition <= 3 ? 'text-green-600' : 
-                  account.serpPosition <= 5 ? 'text-blue-600' : 'text-gray-600'
-                }`}>
-                  #{account.serpPosition}
-                </span>
-              </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {account.publications.count} ({account.publications.days}d)
+                {account.headcount}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900">
+                    {account.publications.financial.last30Days + account.publications.nonFinancial.last30Days}
+                  </span>
+                  <div className="flex-1 h-2 bg-gray-200 rounded">
+                    <div 
+                      className="h-full bg-presspage-teal rounded" 
+                      style={{ 
+                        width: `${(account.publications.financial.last30Days / (account.publications.financial.last30Days + account.publications.nonFinancial.last30Days)) * 100}%` 
+                      }}
+                    />
+                  </div>
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <Link to={`/account/${account.id}`} className="bg-presspage-teal text-white px-3 py-1 rounded text-xs">

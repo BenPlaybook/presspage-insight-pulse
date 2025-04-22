@@ -1,14 +1,22 @@
-
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { MetricCard } from '@/components/MetricCard';
 import { AccountsTable } from '@/components/AccountsTable';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Index = () => {
+  const [status, setStatus] = useState<string>('');
+  const [region, setRegion] = useState<string>('');
+  const [timeframe, setTimeframe] = useState<string>('');
+
   // Mock data for metrics
   const metrics = {
     totalAccounts: 127,
@@ -32,22 +40,36 @@ const Index = () => {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
           <div className="flex gap-2">
-            <Select>
-              <option value="">Status</option>
-              <option value="active">Active</option>
-              <option value="processing">Processing</option>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+              </SelectContent>
             </Select>
-            <Select>
-              <option value="">Region</option>
-              <option value="na">North America</option>
-              <option value="eu">Europe</option>
-              <option value="asia">Asia</option>
+
+            <Select value={region} onValueChange={setRegion}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="na">North America</SelectItem>
+                <SelectItem value="eu">Europe</SelectItem>
+                <SelectItem value="asia">Asia</SelectItem>
+              </SelectContent>
             </Select>
-            <Select>
-              <option value="">Last Updated</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
+
+            <Select value={timeframe} onValueChange={setTimeframe}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Last Updated" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>
