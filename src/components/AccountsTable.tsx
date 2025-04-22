@@ -1,8 +1,8 @@
 
 import { Link } from 'react-router-dom';
 import { Account } from '@/types/accounts';
-import { StatusIndicator } from './accounts/StatusIndicator';
 import { PublicationsDistribution } from './accounts/PublicationsDistribution';
+import { Badge } from '@/components/ui/badge';
 import { AccountsTableHeader } from './accounts/AccountsTableHeader';
 
 const accounts: Account[] = [
@@ -118,12 +118,26 @@ export const AccountsTable = () => {
             <tr key={account.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <StatusIndicator status={account.status} />
-                  <span className="ml-2 font-semibold text-gray-900">{account.name}</span>
+                  <div className="flex-shrink-0 mr-3">
+                    <div
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ 
+                        backgroundColor: account.status === 'Active' 
+                          ? '#00A99D' 
+                          : '#FFB547' 
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-900">{account.name}</span>
+                    <Badge 
+                      variant={account.status === 'Active' ? 'default' : 'secondary'}
+                      className="w-fit mt-1"
+                    >
+                      {account.status}
+                    </Badge>
+                  </div>
                 </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`status-${account.status.toLowerCase()}`}>{account.status}</span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(account.dateAdded).toLocaleDateString()}

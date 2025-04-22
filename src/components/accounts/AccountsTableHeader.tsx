@@ -6,9 +6,6 @@ export const AccountsTableHeader = () => (
         Account
       </th>
       <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-        Status
-      </th>
-      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
         Date Added
       </th>
       <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
