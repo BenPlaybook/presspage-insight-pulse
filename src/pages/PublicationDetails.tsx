@@ -7,9 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DistributionTimeline } from '@/components/publications/DistributionTimeline';
 import { SerpResultsTable } from '@/components/publications/SerpResultsTable';
 import { SocialCoverageTable } from '@/components/publications/SocialCoverageTable';
+import { PublicationMetrics } from '@/components/publications/PublicationMetrics';
+import { ArticleInformation } from '@/components/publications/ArticleInformation';
 import { Publication } from '@/types/publications';
 
-// Mock publication data (we would fetch this based on ID in a real app)
 const mockPublication: Publication = {
   id: '101',
   title: 'Q3 2024 Financial Results',
@@ -120,14 +121,12 @@ const PublicationDetails = () => {
       <Header variant="account" title="Publication Details" />
       
       <main className="container mx-auto px-4 py-6">
-        {/* Navigation breadcrumbs */}
         <div className="text-sm text-gray-500 mb-4">
           <Link to="/" className="hover:text-presspage-teal">Dashboard</Link> &gt; 
           <Link to={`/account/${id}`} className="hover:text-presspage-teal ml-1">Shopify</Link> &gt; 
           <span className="ml-1">Publication Details</span>
         </div>
         
-        {/* Publication header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-[#122F4A]">{mockPublication.title}</h1>
@@ -143,7 +142,8 @@ const PublicationDetails = () => {
           </div>
         </div>
         
-        {/* Key metrics */}
+        <PublicationMetrics publication={mockPublication} />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <MetricCard
             title="Distribution Time"
@@ -165,30 +165,25 @@ const PublicationDetails = () => {
           />
         </div>
         
-        {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="w-full mb-6 border-b">
             <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="article" className="text-sm">Article Information</TabsTrigger>
             <TabsTrigger value="serp" className="text-sm">SERP Results</TabsTrigger>
             <TabsTrigger value="social" className="text-sm">Social Media</TabsTrigger>
             <TabsTrigger value="historical" className="text-sm">Historical Comparison</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
-            {/* Publication content */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-2">Publication Content</h3>
-                <p className="text-gray-700">{mockPublication.content}</p>
-              </CardContent>
-            </Card>
-            
-            {/* Distribution timeline */}
             <Card>
               <CardContent className="p-6">
                 <DistributionTimeline publication={mockPublication} />
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="article" className="space-y-6">
+            <ArticleInformation publication={mockPublication} />
           </TabsContent>
           
           <TabsContent value="serp" className="space-y-6">
@@ -218,7 +213,6 @@ const PublicationDetails = () => {
           </TabsContent>
         </Tabs>
         
-        {/* Back button */}
         <div className="mt-8">
           <Link 
             to={`/account/${id}`} 
