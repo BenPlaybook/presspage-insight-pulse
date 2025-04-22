@@ -1,14 +1,10 @@
-
 import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import { MetricCard } from '@/components/MetricCard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AISummary from '@/components/AISummary';
-import { PublicationsTable } from '@/components/publications/PublicationsTable';
-import { PublicationsFilters } from '@/components/publications/PublicationsFilters';
-import { PublicationsPagination } from '@/components/publications/PublicationsPagination';
-import { Publication } from '@/types/publications';
+import { AccountHeader } from '@/components/account/AccountHeader';
+import { AccountMetrics } from '@/components/account/AccountMetrics';
+import { AccountTabs } from '@/components/account/AccountTabs';
 
 // Mock publications data
 const mockPublications: Publication[] = [
@@ -433,7 +429,6 @@ const accountData = {
 
 const AccountDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('publications');
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredPublications, setFilteredPublications] = useState(mockPublications);
   
@@ -501,53 +496,15 @@ const AccountDetails = () => {
       <Header variant="account" title={accountData.name} />
       
       <main className="container mx-auto px-4 py-6">
-        {/* Navigation breadcrumbs */}
-        <div className="text-sm text-gray-500 mb-4">
-          <Link to="/" className="hover:text-presspage-teal">Dashboard</Link> &gt; {accountData.name}
-        </div>
+        <AccountHeader
+          name={accountData.name}
+          url={accountData.url}
+          status={accountData.status}
+          lastAnalyzed={accountData.lastAnalyzed}
+        />
         
-        {/* Account header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold text-[#122F4A]">{accountData.name}</h1>
-              <p className="text-sm text-gray-500">{accountData.url} • {accountData.status} • Last analyzed: {accountData.lastAnalyzed}</p>
-            </div>
-            <button className="bg-presspage-teal text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors">
-              Run Analysis
-            </button>
-          </div>
-        </div>
+        <AccountMetrics metrics={accountData.metrics} />
         
-        {/* Key metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <MetricCard
-            title="Avg. Publication to Distribution"
-            value={accountData.metrics.distributionTime.value}
-            trend={{
-              value: accountData.metrics.distributionTime.trend,
-              positive: true
-            }}
-          />
-          <MetricCard
-            title="Average SERP Position"
-            value={accountData.metrics.serpPosition.value}
-            subtext={accountData.metrics.serpPosition.positions}
-            valueClassName="text-presspage-teal"
-          />
-          <MetricCard
-            title="Total Publications"
-            value={accountData.metrics.publications.count}
-            subtext={accountData.metrics.publications.period}
-          />
-          <MetricCard
-            title="Distribution Channels"
-            value={accountData.metrics.channels.count}
-            subtext={accountData.metrics.channels.description}
-          />
-        </div>
-        
-        {/* AI Summary */}
         <div className="mb-6">
           <AISummary 
             internalSummary={accountData.aiSummary.internal}
@@ -555,53 +512,17 @@ const AccountDetails = () => {
           />
         </div>
         
-        {/* Tabs */}
-        <Tabs defaultValue="publications" className="w-full">
-          <TabsList className="w-full mb-6 border-b">
-            <TabsTrigger value="publications" className="text-sm">Publications</TabsTrigger>
-            <TabsTrigger value="analytics" className="text-sm">Analytics</TabsTrigger>
-            <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="publications" className="bg-white rounded-lg shadow-sm p-6">
-            <PublicationsFilters 
-              onSearchChange={handleSearchChange}
-              onStatusChange={handleStatusChange}
-              onClassificationChange={handleClassificationChange}
-              onDateRangeChange={handleDateRangeChange}
-            />
-            
-            <PublicationsTable publications={paginatedPublications} />
-            
-            <PublicationsPagination 
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </TabsContent>
-          
-          <TabsContent value="analytics">
-            <div className="bg-white rounded-lg shadow-sm p-6 h-64 flex items-center justify-center">
-              <p className="text-gray-500">Analytics content will appear here</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="settings">
-            <div className="bg-white rounded-lg shadow-sm p-6 h-64 flex items-center justify-center">
-              <p className="text-gray-500">Settings content will appear here</p>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Create benchmark report button */}
-        <div className="mt-8">
-          <Link 
-            to="/benchmark" 
-            className="w-full bg-presspage-teal text-white py-3 px-4 rounded-md font-medium hover:bg-opacity-90 transition-colors block text-center"
-          >
-            Create Benchmark Report
-          </Link>
-        </div>
+        <AccountTabs
+          accountId={id || ''}
+          publications={paginatedPublications}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          onSearchChange={handleSearchChange}
+          onStatusChange={handleStatusChange}
+          onClassificationChange={handleClassificationChange}
+          onDateRangeChange={handleDateRangeChange}
+        />
       </main>
     </div>
   );
