@@ -18,6 +18,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
 
 interface PublicationsFiltersProps {
   onSearchChange: (search: string) => void;
@@ -33,7 +34,7 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
   onDateRangeChange
 }) => {
   const [search, setSearch] = React.useState('');
-  const [date, setDate] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [date, setDate] = React.useState<DateRange | undefined>({
     from: undefined,
     to: undefined
   });
@@ -84,7 +85,7 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-[150px] justify-start">
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date.from ? (
+              {date?.from ? (
                 date.to ? (
                   <>
                     {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
@@ -101,13 +102,15 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
             <Calendar
               initialFocus
               mode="range"
-              defaultMonth={date.from}
+              defaultMonth={date?.from}
               selected={date}
               onSelect={(selectedDate) => {
-                // Handle the case where selectedDate might be null
-                const newDate = selectedDate || { from: undefined, to: undefined };
-                setDate(newDate);
-                onDateRangeChange(newDate);
+                setDate(selectedDate);
+                // Ensure we pass a consistent object structure even when date is undefined
+                onDateRangeChange({
+                  from: selectedDate?.from,
+                  to: selectedDate?.to
+                });
               }}
               numberOfMonths={1}
               className="pointer-events-auto"

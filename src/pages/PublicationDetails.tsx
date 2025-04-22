@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -20,7 +19,7 @@ import { Publication } from '@/types/publications';
 const mockPublication: Publication = {
   id: '101',
   title: 'Q3 2024 Financial Results',
-  status: 'Published',
+  status: 'Completed',
   detectedDate: '2025-01-15',
   classification: 'Financial',
   serpPosition: {
@@ -58,19 +57,40 @@ const mockPublication: Publication = {
   totalLocations: 3,
   content: 'Shopify Inc. (NYSE: SHOP) (TSX: SHOP), a provider of essential internet infrastructure for commerce, announced today its financial results for the quarter ended September 30, 2024.',
   source: 'shopify.com/news',
-  trackingPeriod: '30 days',
+  trackingPeriod: {
+    start: '2025-01-15',
+    end: '2025-02-15'
+  },
   serpResults: [
     {
       region: 'NA',
       position: 1,
       url: 'https://example.com/news/financial-results',
-      detected: '2025-01-15'
+      detected: '2025-01-15',
+      title: 'Q3 2024 Financial Results',
+      articleDate: '2025-01-15',
+      matchStatus: 'Exact Match',
+      confidence: 'High',
+      reasoning: 'Exact title match',
+      domain: 'example.com',
+      searchQuery: 'financial results shopify',
+      searchType: 'google',
+      partialMatch: false
     },
     {
       region: 'EU',
       position: 3,
       url: 'https://example.eu/news/financial-results',
-      detected: '2025-01-15'
+      detected: '2025-01-15',
+      title: 'Q3 2024 Financial Results',
+      articleDate: '2025-01-15',
+      matchStatus: 'Exact Match',
+      confidence: 'High',
+      reasoning: 'Exact title match',
+      domain: 'example.eu',
+      searchQuery: 'financial results shopify',
+      searchType: 'google',
+      partialMatch: false
     }
   ],
   newswireDistribution: [
@@ -84,7 +104,17 @@ const mockPublication: Publication = {
       time: '2025-01-15 09:30 AM',
       reach: 4500000
     }
-  ]
+  ],
+  socialMatches: {
+    twitter: {
+      matched: true,
+      timeDifference: '0.8 hrs'
+    },
+    linkedin: {
+      matched: true,
+      timeDifference: '1.2 hrs'
+    }
+  }
 };
 
 const DistributionTimeline: React.FC<{ publication: Publication }> = ({ publication }) => {
@@ -180,7 +210,7 @@ const PublicationDetails = () => {
               <span className="hidden md:block text-gray-300 mx-2">•</span>
               <span className="text-sm text-gray-500">Classification: {mockPublication.classification}</span>
               <span className="hidden md:block text-gray-300 mx-2">•</span>
-              <span className="text-sm text-gray-500">Tracking Period: {mockPublication.trackingPeriod}</span>
+              <span className="text-sm text-gray-500">Tracking Period: {mockPublication.trackingPeriod.start} - {mockPublication.trackingPeriod.end}</span>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ const mockPublications: Publication[] = [
   {
     id: '101',
     title: 'Q3 2024 Financial Results',
-    status: 'Published',
+    status: 'Completed',
     detectedDate: '2025-01-15',
     classification: 'Financial',
     serpPosition: {
@@ -56,20 +56,52 @@ const mockPublications: Publication[] = [
         region: 'NA',
         position: 1,
         url: 'https://example.com/news/financial-results',
-        detected: '2025-01-15'
+        detected: '2025-01-15',
+        title: 'Q3 2024 Financial Results',
+        articleDate: '2025-01-15',
+        matchStatus: 'Exact Match',
+        confidence: 'High',
+        reasoning: 'Exact title match',
+        domain: 'example.com',
+        searchQuery: 'financial results shopify',
+        searchType: 'google',
+        partialMatch: false
       },
       {
         region: 'EU',
         position: 3,
         url: 'https://example.eu/news/financial-results',
-        detected: '2025-01-15'
+        detected: '2025-01-15',
+        title: 'Q3 2024 Financial Results',
+        articleDate: '2025-01-15',
+        matchStatus: 'Exact Match',
+        confidence: 'High',
+        reasoning: 'Exact title match',
+        domain: 'example.eu',
+        searchQuery: 'financial results shopify',
+        searchType: 'google',
+        partialMatch: false
       }
-    ]
+    ],
+    trackingPeriod: {
+      start: '2025-01-15',
+      end: '2025-02-15'
+    },
+    socialMatches: {
+      twitter: {
+        matched: true,
+        timeDifference: '0.8 hrs'
+      },
+      linkedin: {
+        matched: true,
+        timeDifference: '1.2 hrs'
+      }
+    }
   },
   {
     id: '102',
     title: 'New Product Launch Announcement for Shopify Commerce Platform with Enhanced Features',
-    status: 'Matched',
+    status: 'In Progress',
     detectedDate: '2025-01-12',
     classification: 'Non-Financial',
     serpPosition: {
@@ -103,20 +135,52 @@ const mockPublications: Publication[] = [
         region: 'NA',
         position: 2,
         url: 'https://example.com/news/product-launch',
-        detected: '2025-01-12'
+        detected: '2025-01-12',
+        title: 'New Product Launch',
+        articleDate: '2025-01-12',
+        matchStatus: 'Partial Match',
+        confidence: 'Medium',
+        reasoning: 'Title matches partially',
+        domain: 'example.com',
+        searchQuery: 'shopify product launch',
+        searchType: 'google',
+        partialMatch: true
       },
       {
         region: 'EU',
         position: 4,
         url: 'https://example.eu/news/product-launch',
-        detected: '2025-01-12'
+        detected: '2025-01-12',
+        title: 'New Product Launch',
+        articleDate: '2025-01-12',
+        matchStatus: 'Partial Match',
+        confidence: 'Medium',
+        reasoning: 'Title matches partially',
+        domain: 'example.eu',
+        searchQuery: 'shopify product launch',
+        searchType: 'google',
+        partialMatch: true
       }
-    ]
+    ],
+    trackingPeriod: {
+      start: '2025-01-12',
+      end: '2025-02-12'
+    },
+    socialMatches: {
+      twitter: {
+        matched: true,
+        timeDifference: '1.1 hrs'
+      },
+      linkedin: {
+        matched: true,
+        timeDifference: '1.8 hrs'
+      }
+    }
   },
   {
     id: '103',
     title: 'Partnership with Leading Tech Company',
-    status: 'Distributed',
+    status: 'Pending',
     detectedDate: '2025-01-08',
     classification: 'Non-Financial',
     serpPosition: {
@@ -157,15 +221,47 @@ const mockPublications: Publication[] = [
         region: 'NA',
         position: 4,
         url: 'https://example.com/news/partnership',
-        detected: '2025-01-08'
+        detected: '2025-01-08',
+        title: 'Partnership Announcement',
+        articleDate: '2025-01-08',
+        matchStatus: 'Partial Match',
+        confidence: 'Medium',
+        reasoning: 'Title matches partially',
+        domain: 'example.com',
+        searchQuery: 'shopify partnership',
+        searchType: 'google',
+        partialMatch: true
       },
       {
         region: 'EU',
         position: 6,
         url: 'https://example.eu/news/partnership',
-        detected: '2025-01-08'
+        detected: '2025-01-08',
+        title: 'Partnership Announcement',
+        articleDate: '2025-01-08',
+        matchStatus: 'Partial Match',
+        confidence: 'Medium',
+        reasoning: 'Title matches partially',
+        domain: 'example.eu',
+        searchQuery: 'shopify partnership',
+        searchType: 'google',
+        partialMatch: true
       }
-    ]
+    ],
+    trackingPeriod: {
+      start: '2025-01-08',
+      end: '2025-02-08'
+    },
+    socialMatches: {
+      twitter: {
+        matched: true,
+        timeDifference: '1.5 hrs'
+      },
+      linkedin: {
+        matched: true,
+        timeDifference: '2.1 hrs'
+      }
+    }
   },
   {
     id: '104',
@@ -184,12 +280,24 @@ const mockPublications: Publication[] = [
     },
     distributionTime: 'Pending',
     totalLocations: 0,
-    serpResults: []
+    serpResults: [],
+    trackingPeriod: {
+      start: '2025-01-05',
+      end: '2025-02-05'
+    },
+    socialMatches: {
+      twitter: {
+        matched: false
+      },
+      linkedin: {
+        matched: false
+      }
+    }
   },
   {
     id: '105',
     title: 'Annual Sustainability Report',
-    status: 'Published',
+    status: 'Completed',
     detectedDate: '2024-12-28',
     classification: 'Non-Financial',
     serpPosition: {
@@ -230,15 +338,47 @@ const mockPublications: Publication[] = [
         region: 'NA',
         position: 3,
         url: 'https://example.com/news/sustainability',
-        detected: '2024-12-28'
+        detected: '2024-12-28',
+        title: 'Annual Sustainability Report',
+        articleDate: '2024-12-28',
+        matchStatus: 'Exact Match',
+        confidence: 'High',
+        reasoning: 'Exact title match',
+        domain: 'example.com',
+        searchQuery: 'shopify sustainability',
+        searchType: 'google',
+        partialMatch: false
       },
       {
         region: 'EU',
         position: 5,
         url: 'https://example.eu/news/sustainability',
-        detected: '2024-12-28'
+        detected: '2024-12-28',
+        title: 'Annual Sustainability Report',
+        articleDate: '2024-12-28',
+        matchStatus: 'Exact Match',
+        confidence: 'High',
+        reasoning: 'Exact title match',
+        domain: 'example.eu',
+        searchQuery: 'shopify sustainability',
+        searchType: 'google',
+        partialMatch: false
       }
-    ]
+    ],
+    trackingPeriod: {
+      start: '2024-12-28',
+      end: '2025-01-28'
+    },
+    socialMatches: {
+      twitter: {
+        matched: true,
+        timeDifference: '0.9 hrs'
+      },
+      linkedin: {
+        matched: true,
+        timeDifference: '1.4 hrs'
+      }
+    }
   }
 ];
 
