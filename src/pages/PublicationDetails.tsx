@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MetricCard } from '@/components/MetricCard';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DistributionTimeline } from '@/components/publications/DistributionTimeline';
-import { SerpResultsTable } from '@/components/publications/SerpResultsTable';
-import { SocialCoverageTable } from '@/components/publications/SocialCoverageTable';
 import { PublicationMetrics } from '@/components/publications/PublicationMetrics';
-import { ArticleInformation } from '@/components/publications/ArticleInformation';
 import { Publication } from '@/types/publications';
 
 const mockPublication: Publication = {
@@ -114,7 +111,6 @@ const mockPublication: Publication = {
 
 const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
-  const [activeTab, setActiveTab] = useState('overview');
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,53 +161,42 @@ const PublicationDetails = () => {
           />
         </div>
         
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full mb-6 border-b">
-            <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="article" className="text-sm">Article Information</TabsTrigger>
-            <TabsTrigger value="serp" className="text-sm">SERP Results</TabsTrigger>
-            <TabsTrigger value="social" className="text-sm">Social Media</TabsTrigger>
-            <TabsTrigger value="historical" className="text-sm">Historical Comparison</TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-1">
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-medium mb-4">Article Thumbnail</h3>
+                <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Article thumbnail"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">{mockPublication.title}</p>
+                  <p className="text-xs text-gray-500 line-clamp-3">{mockPublication.content}</p>
+                  <a 
+                    href={mockPublication.source} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-presspage-teal hover:text-opacity-80"
+                  >
+                    View original article →
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           
-          <TabsContent value="overview" className="space-y-6">
+          <div className="lg:col-span-2">
             <Card>
               <CardContent className="p-6">
                 <DistributionTimeline publication={mockPublication} />
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="article" className="space-y-6">
-            <ArticleInformation publication={mockPublication} />
-          </TabsContent>
-          
-          <TabsContent value="serp" className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4">SERP Results</h3>
-                <SerpResultsTable results={mockPublication.serpResults} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="social" className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4">Social Media Coverage</h3>
-                <SocialCoverageTable platforms={mockPublication.socialCoverage.platforms} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="historical" className="space-y-6">
-            <Card>
-              <CardContent className="p-6 h-64 flex items-center justify-center">
-                <p className="text-gray-500">Historical comparison data will appear here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
         
         <div className="mt-8">
           <Link 
