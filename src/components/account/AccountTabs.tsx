@@ -31,7 +31,7 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
   onDateRangeChange,
 }) => {
   return (
-    <div className="pb-24">
+    <>
       <Tabs defaultValue="publications" className="w-full">
         <TabsList className="w-full mb-6 border-b">
           <TabsTrigger value="publications" className="text-sm">Publications</TabsTrigger>
@@ -70,6 +70,6 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
       </Tabs>
       
       <StickyBenchmarkButton />
-    </div>
+    </>
   );
 };
