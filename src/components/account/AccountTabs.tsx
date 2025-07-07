@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Publication } from '@/types/publications';
 import { PublicationsTable } from '@/components/publications/PublicationsTable';
 import { PublicationsFilters } from '@/components/publications/PublicationsFilters';
 import { PublicationsPagination } from '@/components/publications/PublicationsPagination';
+import { StickyBenchmarkButton } from './StickyBenchmarkButton';
 
 interface AccountTabsProps {
   accountId: string;
@@ -69,14 +69,7 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
         </TabsContent>
       </Tabs>
       
-      <div className="mt-8">
-        <Link 
-          to="/benchmark" 
-          className="w-full bg-presspage-teal text-white py-3 px-4 rounded-md font-medium hover:bg-opacity-90 transition-colors block text-center"
-        >
-          Create Benchmark Report
-        </Link>
-      </div>
+      <StickyBenchmarkButton />
     </>
   );
 };
