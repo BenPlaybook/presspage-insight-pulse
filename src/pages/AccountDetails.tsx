@@ -10,14 +10,37 @@ const AccountDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [classificationFilter, setClassificationFilter] = useState('all');
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined
-  });
 
-  // Mock data - replace with actual data fetching
+  // Mock account data
+  const mockAccountData = {
+    name: 'TechCorp Inc.',
+    url: 'www.techcorp.com',
+    status: 'Active',
+    lastAnalyzed: '2 hours ago'
+  };
+
+  // Mock metrics data
+  const mockMetrics = {
+    distributionTime: {
+      value: '2.3 hrs',
+      trend: '↓ 15%'
+    },
+    serpPosition: {
+      value: '3.2',
+      positions: 'NA: #3, EU: #4'
+    },
+    publications: {
+      count: 47,
+      period: 'Last 30 days'
+    },
+    channels: {
+      count: 28,
+      description: 'Active distribution channels'
+    }
+  };
+
+  // Mock publications data
   const mockPublications: Publication[] = [
     {
       id: '1',
@@ -65,9 +88,14 @@ const AccountDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AccountHeader accountId={id} />
-      <AccountMetrics accountId={id} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AccountHeader 
+          name={mockAccountData.name}
+          url={mockAccountData.url}
+          status={mockAccountData.status}
+          lastAnalyzed={mockAccountData.lastAnalyzed}
+        />
+        <AccountMetrics metrics={mockMetrics} />
         <AccountTabs
           accountId={id}
           publications={mockPublications}
@@ -75,9 +103,7 @@ const AccountDetails: React.FC = () => {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           onSearchChange={setSearchTerm}
-          onStatusChange={setStatusFilter}
           onClassificationChange={setClassificationFilter}
-          onDateRangeChange={setDateRange}
         />
       </div>
     </div>
