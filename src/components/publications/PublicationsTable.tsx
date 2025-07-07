@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Publication } from '@/types/publications';
-import { Eye, CheckCircle, Clock, Circle, Search, BarChart3 } from 'lucide-react';
+import { Eye, CheckCircle, Clock, Circle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface PublicationsTableProps {
@@ -73,7 +73,7 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
                     <span className="cursor-help">Detected Date</span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Date when the article was first detected by our system</p>
+                    <p>Date when the article was first detected by our system.</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -83,7 +83,7 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
                     <span className="cursor-help">SERP Position</span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Search engine ranking: NA = North America, EU = Europe</p>
+                    <p>Search engine ranking: NA = North America, EU = Europe.</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -93,7 +93,7 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
                     <span className="cursor-help">Social Coverage</span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Number of social channels where the article appeared vs. total expected</p>
+                    <p>Number of social channels where the article appeared vs. total expected.</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -103,7 +103,7 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
                     <span className="cursor-help">Distribution Time</span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Time it took for the article to reach all tracked media locations</p>
+                    <p>Time it took for the article to reach all tracked media locations.</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -113,7 +113,7 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
                     <span className="cursor-help">Total Locations</span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Number of websites or platforms where the article was published</p>
+                    <p>Number of websites or platforms where the article was published.</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -123,7 +123,7 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
                     <span className="cursor-help">Actions</span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Click to view detailed metrics and coverage map</p>
+                    <p>Click to view detailed metrics and coverage map.</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>

@@ -2,7 +2,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { 
   Select, 
   SelectContent, 
@@ -10,15 +9,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger 
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
 
 interface PublicationsFiltersProps {
   onSearchChange: (search: string) => void;
@@ -29,15 +19,9 @@ interface PublicationsFiltersProps {
 
 export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
   onSearchChange,
-  onStatusChange,
-  onClassificationChange,
-  onDateRangeChange
+  onClassificationChange
 }) => {
   const [search, setSearch] = React.useState('');
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: undefined,
-    to: undefined
-  });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -57,19 +41,6 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
       </div>
       
       <div className="flex flex-wrap gap-2">
-        <Select onValueChange={onStatusChange}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="analyzing">Analyzing</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
-        
         <Select onValueChange={onClassificationChange}>
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Classification" />
@@ -80,43 +51,6 @@ export const PublicationsFilters: React.FC<PublicationsFiltersProps> = ({
             <SelectItem value="non-financial">Non-Financial</SelectItem>
           </SelectContent>
         </Select>
-        
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-[150px] justify-start">
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date?.from ? (
-                date.to ? (
-                  <>
-                    {format(date.from, "MMM d")} - {format(date.to, "MMM d")}
-                  </>
-                ) : (
-                  format(date.from, "MMM d, yyyy")
-                )
-              ) : (
-                <span>Date Range</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={date?.from}
-              selected={date}
-              onSelect={(selectedDate) => {
-                setDate(selectedDate);
-                // Ensure we pass a consistent object structure even when date is undefined
-                onDateRangeChange({
-                  from: selectedDate?.from,
-                  to: selectedDate?.to
-                });
-              }}
-              numberOfMonths={1}
-              className="pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
       </div>
     </div>
   );
