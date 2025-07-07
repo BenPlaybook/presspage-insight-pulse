@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Publication } from '@/types/publications';
-import { Eye, CheckCircle, Clock, Circle, Search, BarChart3 } from 'lucide-react';
+import { Eye, CheckCircle, Clock, Circle, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface PublicationsTableProps {

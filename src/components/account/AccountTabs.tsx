@@ -14,9 +14,6 @@ interface AccountTabsProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onSearchChange: (search: string) => void;
-  onStatusChange: (status: string) => void;
-  onClassificationChange: (classification: string) => void;
-  onDateRangeChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
 }
 
 export const AccountTabs: React.FC<AccountTabsProps> = ({
@@ -26,9 +23,6 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
   totalPages,
   onPageChange,
   onSearchChange,
-  onStatusChange,
-  onClassificationChange,
-  onDateRangeChange,
 }) => {
   return (
     <>
@@ -42,9 +36,6 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
         <TabsContent value="publications" className="bg-white rounded-lg shadow-sm p-6">
           <PublicationsFilters 
             onSearchChange={onSearchChange}
-            onStatusChange={onStatusChange}
-            onClassificationChange={onClassificationChange}
-            onDateRangeChange={onDateRangeChange}
           />
           
           <PublicationsTable publications={publications} />

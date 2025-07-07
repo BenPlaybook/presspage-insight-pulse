@@ -5,6 +5,7 @@ import AISummary from '@/components/AISummary';
 import { AccountHeader } from '@/components/account/AccountHeader';
 import { AccountMetrics } from '@/components/account/AccountMetrics';
 import { AccountTabs } from '@/components/account/AccountTabs';
+import { Publication } from '@/types/publications';
 
 // Mock publications data
 const mockPublications: Publication[] = [
@@ -447,55 +448,11 @@ const AccountDetails = () => {
     setCurrentPage(1);
   };
   
-  const handleStatusChange = (status: string) => {
-    if (status === 'all') {
-      setFilteredPublications(mockPublications);
-    } else {
-      const filtered = mockPublications.filter(
-        pub => pub.status.toLowerCase() === status
-      );
-      setFilteredPublications(filtered);
-    }
-    setCurrentPage(1);
-  };
-  
-  const handleClassificationChange = (classification: string) => {
-    if (classification === 'all') {
-      setFilteredPublications(mockPublications);
-    } else {
-      const filtered = mockPublications.filter(
-        pub => pub.classification.toLowerCase() === classification
-      );
-      setFilteredPublications(filtered);
-    }
-    setCurrentPage(1);
-  };
-  
-  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
-    if (!range.from) {
-      setFilteredPublications(mockPublications);
-      return;
-    }
-    
-    const filtered = mockPublications.filter(pub => {
-      const pubDate = new Date(pub.detectedDate);
-      if (range.from && range.to) {
-        return pubDate >= range.from && pubDate <= range.to;
-      } else if (range.from) {
-        return pubDate >= range.from;
-      }
-      return true;
-    });
-    
-    setFilteredPublications(filtered);
-    setCurrentPage(1);
-  };
-  
   return (
     <div className="min-h-screen bg-gray-50">
       <Header variant="account" title={accountData.name} />
       
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 pb-32">
         <AccountHeader
           name={accountData.name}
           url={accountData.url}
@@ -519,9 +476,6 @@ const AccountDetails = () => {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           onSearchChange={handleSearchChange}
-          onStatusChange={handleStatusChange}
-          onClassificationChange={handleClassificationChange}
-          onDateRangeChange={handleDateRangeChange}
         />
       </main>
     </div>
