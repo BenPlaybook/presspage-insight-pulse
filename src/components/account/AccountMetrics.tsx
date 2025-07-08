@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MetricCard } from '@/components/MetricCard';
-import { FileText, Zap, Search, Twitter, Linkedin, Newspaper, Globe } from 'lucide-react';
+import { FileText, Zap, Search, Globe } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 interface AccountMetricsProps {
@@ -31,12 +31,13 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
+            <div className="h-full">
               <MetricCard
                 title="Total Publications"
                 value={metrics.publications.count}
                 subtext={metrics.publications.period}
                 icon={<FileText className="w-5 h-5" />}
+                className="h-full"
               />
             </div>
           </TooltipTrigger>
@@ -47,18 +48,13 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
+            <div className="h-full">
               <MetricCard
                 title="Distribution Channels"
                 value={metrics.channels.count}
                 subtext={metrics.channels.description}
-                icon={
-                  <div className="flex -space-x-1">
-                    <Twitter className="w-4 h-4 text-blue-500" />
-                    <Linkedin className="w-4 h-4 text-blue-600" />
-                    <Newspaper className="w-4 h-4 text-gray-600" />
-                  </div>
-                }
+                icon={<Globe className="w-5 h-5" />}
+                className="h-full"
               />
             </div>
           </TooltipTrigger>
@@ -69,7 +65,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
+            <div className="h-full">
               <MetricCard
                 title="Publication–Distribution Time"
                 value={metrics.distributionTime.value}
@@ -78,6 +74,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
                   positive: true
                 }}
                 icon={<Zap className="w-5 h-5" />}
+                className="h-full"
               />
             </div>
           </TooltipTrigger>
@@ -88,18 +85,19 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div>
+            <div className="h-full">
               <MetricCard
                 title="Search Engine Position"
                 value={metrics.serpPosition.value}
                 subtext={metrics.serpPosition.positions}
                 valueClassName="text-presspage-teal"
                 icon={<Search className="w-5 h-5" />}
+                className="h-full"
               />
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Average ranking position in search engine results pages (SERP) across North America and Europe</p>
+            <p>SERP (Search Engine Results Page) - Average ranking position in search results across North America and Europe</p>
           </TooltipContent>
         </Tooltip>
       </div>
