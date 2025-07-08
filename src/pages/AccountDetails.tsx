@@ -386,15 +386,8 @@ const accountData = {
   url: 'shopify.com',
   status: 'Active',
   lastAnalyzed: '3 hours ago',
+  performanceScore: 85,
   metrics: {
-    distributionTime: {
-      value: '1.5 hrs',
-      trend: '20% vs last month'
-    },
-    serpPosition: {
-      value: '#3',
-      positions: '+2 positions'
-    },
     publications: {
       count: 47,
       period: 'Last 30 days'
@@ -402,6 +395,14 @@ const accountData = {
     channels: {
       count: 5,
       description: 'Active channels'
+    },
+    distributionTime: {
+      value: '1.5 hrs',
+      trend: '20% vs last month'
+    },
+    serpPosition: {
+      value: '#3',
+      positions: '+2 positions'
     }
   },
   aiSummary: {
@@ -460,14 +461,33 @@ const AccountDetails = () => {
           lastAnalyzed={accountData.lastAnalyzed}
         />
         
-        <AccountMetrics metrics={accountData.metrics} />
-        
-        <div className="mb-6">
-          <AISummary 
-            internalSummary={accountData.aiSummary.internal}
-            customerSummary={accountData.aiSummary.customer}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+          <div className="lg:col-span-3">
+            <AISummary 
+              internalSummary={accountData.aiSummary.internal}
+              customerSummary={accountData.aiSummary.customer}
+            />
+          </div>
+          
+          <div className="lg:col-span-1">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-presspage-teal mb-2">
+                  {accountData.performanceScore}
+                </div>
+                <div className="text-sm font-medium text-gray-900 mb-2">
+                  PR Performance Score
+                </div>
+                <div className="text-xs text-gray-500">
+                  Based on distribution speed, coverage reach, and search visibility. 
+                  Scores above 80 indicate excellent performance.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        <AccountMetrics metrics={accountData.metrics} />
         
         <AccountTabs
           accountId={id || ''}
