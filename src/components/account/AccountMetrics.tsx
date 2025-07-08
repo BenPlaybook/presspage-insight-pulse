@@ -60,27 +60,24 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
             <div className="h-full">
               <MetricCard
                 title="Distribution Channels"
-                value={metrics.channels.count}
-                subtext={metrics.channels.description}
-                icon={
-                  <div className="flex items-center space-x-1">
-                    <Globe className="w-5 h-5" />
-                    <div className="flex space-x-0.5 ml-1">
-                      {distributionChannels.slice(0, 3).map((channel, index) => {
+                value={
+                  <div className="flex items-center gap-2">
+                    <span>{metrics.channels.count}</span>
+                    <div className="flex space-x-0.5">
+                      {distributionChannels.map((channel, index) => {
                         const IconComponent = channel.icon;
                         return (
                           <IconComponent 
                             key={channel.name} 
-                            className="w-3 h-3 text-gray-400" 
+                            className="w-4 h-4 text-gray-400" 
                           />
                         );
                       })}
-                      {distributionChannels.length > 3 && (
-                        <span className="text-xs text-gray-400 ml-0.5">+{distributionChannels.length - 3}</span>
-                      )}
                     </div>
                   </div>
                 }
+                subtext={metrics.channels.description}
+                icon={<Globe className="w-5 h-5" />}
                 className="h-full"
               />
             </div>

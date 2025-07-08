@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 
 type MetricCardProps = {
   title: string;
-  value: string | number;
+  value: string | number | ReactNode;
   trend?: {
     value: string;
     positive?: boolean;
