@@ -44,7 +44,19 @@ export const Header = ({ variant = 'default', title }: HeaderProps) => {
           </button>
         )}
         {location.pathname === '/benchmark' && (
-          <button className="bg-presspage-teal text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors">
+          <button 
+            className="bg-presspage-teal text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center gap-1"
+            onClick={() => {
+              // Trigger contact sales dialog for export
+              const event = new CustomEvent('openContactSales', {
+                detail: { 
+                  title: 'Unlock Export Features',
+                  description: 'Contact our sales team to access PDF, CSV export and sharing features.'
+                }
+              });
+              window.dispatchEvent(event);
+            }}
+          >
             Export
           </button>
         )}
