@@ -9,6 +9,7 @@ import AccountDetails from "./pages/AccountDetails";
 import PublicationDetails from "./pages/PublicationDetails";
 import Benchmark from "./pages/Benchmark";
 import NotFound from "./pages/NotFound";
+import { FeedbackButton } from "./components/FeedbackButton";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <FeedbackButton />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
