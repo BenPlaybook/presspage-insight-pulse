@@ -68,6 +68,7 @@ const SharedSummary = () => {
             customerSummary={summaryData.aiSummary.customer}
             accountId={accountId}
             summaryId={summaryId}
+            accountName={summaryData.accountName}
           />
         </div>
       </main>

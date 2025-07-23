@@ -468,6 +468,7 @@ const AccountDetails = () => {
               customerSummary={accountData.aiSummary.customer}
               accountId={id || '1'}
               summaryId={`summary-${id || '1'}-${Date.now()}`}
+              accountName={accountData.name}
             />
           </div>
           
