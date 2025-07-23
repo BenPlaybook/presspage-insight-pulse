@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import AccountDetails from "./pages/AccountDetails";
 import PublicationDetails from "./pages/PublicationDetails";
 import Benchmark from "./pages/Benchmark";
+import SharedSummary from "./pages/SharedSummary";
 import NotFound from "./pages/NotFound";
 import { FeedbackButton } from "./components/FeedbackButton";
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/account/:id" element={<AccountDetails />} />
           <Route path="/account/:id/publication/:publicationId" element={<PublicationDetails />} />
           <Route path="/benchmark" element={<Benchmark />} />
+          <Route path="/account/:accountId/summary/:summaryId" element={<SharedSummary />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
