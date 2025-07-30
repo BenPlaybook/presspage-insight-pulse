@@ -12,28 +12,58 @@ import SharedSummary from "./pages/SharedSummary";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { FeedbackButton } from "./components/FeedbackButton";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
+import EmailVerification from "./components/EmailVerification";
+import ForgotPassword from "./components/ForgotPassword";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/account/:id" element={<AccountDetails />} />
-          <Route path="/account/:id/publication/:publicationId" element={<PublicationDetails />} />
-          <Route path="/benchmark" element={<Benchmark />} />
-          <Route path="/account/:accountId/summary/:summaryId" element={<SharedSummary />} />
-          <Route path="/login" element={<Login />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <FeedbackButton />
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/account/:accountId/summary/:summaryId" element={<SharedSummary />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            } />
+            <Route path="/account/:id" element={
+              <ProtectedRoute>
+                <AccountDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/account/:id/publication/:publicationId" element={
+              <ProtectedRoute>
+                <PublicationDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/benchmark" element={
+              <ProtectedRoute>
+                <Benchmark />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <FeedbackButton />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

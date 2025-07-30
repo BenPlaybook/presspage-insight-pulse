@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { ALLOWED_DOMAINS } from '@/config/supabase';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,16 +15,19 @@ const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const allowedDomains = ['@presspage.com', '@playbooksystems.io'];
+  const [success, setSuccess] = useState('');
+  
+  const navigate = useNavigate();
+  const { signIn, signUp } = useAuthContext();
 
   const validateEmailDomain = (email: string) => {
-    return allowedDomains.some(domain => email.toLowerCase().endsWith(domain));
+    return ALLOWED_DOMAINS.some(domain => email.toLowerCase().endsWith(domain));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     
     if (!email || !password) {
       setError('Please fill in all fields');
@@ -36,12 +41,36 @@ const Login = () => {
 
     setIsLoading(true);
     
-    // Simulación de autenticación (aquí se conectaría con Supabase)
-    setTimeout(() => {
+    try {
+      if (isLogin) {
+        // Iniciar sesión
+        const { error } = await signIn(email, password);
+        if (error) {
+          setError(error.message);
+        } else {
+          setSuccess('Login successful! Redirecting...');
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        }
+      } else {
+        // Registrarse
+        const { error } = await signUp(email, password);
+        if (error) {
+          setError(error.message);
+        } else {
+          setSuccess('Account created successfully! Please check your email to confirm your account.');
+          // Redirect to email verification page
+          setTimeout(() => {
+            navigate('/verify-email');
+          }, 2000);
+        }
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
       setIsLoading(false);
-      // Por ahora solo mostramos mensaje de éxito
-      alert(isLogin ? 'Login successful!' : 'Account created successfully!');
-    }, 1500);
+    }
   };
 
   return (
@@ -119,12 +148,29 @@ const Login = () => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {isLogin && (
+                  <div className="text-right">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-presspage-blue hover:text-presspage-blue/80"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Error Message */}
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Success Message */}
+              {success && (
+                <Alert>
+                  <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
 

@@ -1,5 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { LogOut } from 'lucide-react';
 
 type HeaderProps = {
   variant?: 'default' | 'dashboard' | 'account' | 'benchmark';
@@ -8,6 +10,7 @@ type HeaderProps = {
 
 export const Header = ({ variant = 'default', title }: HeaderProps) => {
   const location = useLocation();
+  const { user, signOut } = useAuthContext();
   
   return (
     <header className="bg-presspage-blue text-white p-4 flex justify-between items-center">
@@ -27,13 +30,30 @@ export const Header = ({ variant = 'default', title }: HeaderProps) => {
         </h1>
         {variant === 'default' && <span className="text-xs text-gray-400">by Presspage</span>}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
+        {user && (
+          <div className="flex items-center gap-2 mr-4">
+            <Link
+              to="/profile"
+              className="text-sm text-gray-300 hover:text-white transition-colors"
+            >
+              {user.email}
+            </Link>
+            <button
+              onClick={signOut}
+              className="text-gray-300 hover:text-white transition-colors flex items-center gap-1"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         {location.pathname === '/' && (
           <>
             <Link to="/account/new" className="bg-presspage-teal text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center gap-1">
               + Add Account
             </Link>
-            <Link to="/benchmark" className="bg-transparent border border-white text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-10 transition-colors">
+            <Link to="/benchmark" className="bg-transparent border border-white text-white px-3 py-1.1 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-10 transition-colors">
               Benchmark
             </Link>
           </>

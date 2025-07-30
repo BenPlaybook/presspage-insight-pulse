@@ -1,0 +1,7 @@
+export const SUPABASE_CONFIG = {
+  url: 'https://kfqyjghjvwweltpdoffa.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmcXlqZ2hqdnd3ZWx0cGRvZmZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0ODg3MjYsImV4cCI6MjA2MTA2NDcyNn0.SY3P_gSI8GjDHIrpNwsMvwuzt3VCeuXsglpMOStXRRM',
+  serviceRoleKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmcXlqZ2hqdnd3ZWx0cGRvZmZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTQ4ODcyNiwiZXhwIjoyMDYxMDY0NzI2fQ.acEuRG8SdNJ_Y1tFmz_MY2mACgiu5ytg45QFU5sAlyI'
+};
+
+export const ALLOWED_DOMAINS = ['@presspage.com', '@playbooksystems.io']; 
