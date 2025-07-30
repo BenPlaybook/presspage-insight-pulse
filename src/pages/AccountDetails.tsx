@@ -466,6 +466,9 @@ const AccountDetails = () => {
             <AISummary 
               internalSummary={accountData.aiSummary.internal}
               customerSummary={accountData.aiSummary.customer}
+              accountId={id || '1'}
+              summaryId={`summary-${id || '1'}-${Date.now()}`}
+              accountName={accountData.name}
             />
           </div>
           

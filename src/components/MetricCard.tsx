@@ -33,7 +33,7 @@ export const MetricCard = ({
       </div>
       
       <div className="flex items-end gap-2 mb-1">
-        <p className={`text-2xl font-semibold ${valueClassName}`}>{value}</p>
+        <div className={`text-2xl font-semibold ${valueClassName}`}>{value}</div>
         {trend && (
           <div className="flex items-center">
             {trendIcon && (
