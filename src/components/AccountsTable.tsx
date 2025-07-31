@@ -5,13 +5,18 @@ import { PublicationsDistribution } from './accounts/PublicationsDistribution';
 import { Badge } from '@/components/ui/badge';
 import { AccountsTableHeader } from './accounts/AccountsTableHeader';
 
-const accounts: Account[] = [
+interface AccountsTableProps {
+  accounts?: Account[];
+}
+
+// Datos de fallback si no se proporcionan accounts
+const fallbackAccounts: Account[] = [
   {
     id: '1',
     name: 'Shopify',
     status: 'Active',
     dateAdded: '2024-01-15',
-    avgSpeed: '1.5 hrs',
+    industry: 'E-commerce',
     headcount: 12,
     publications: {
       financial: {
@@ -31,7 +36,7 @@ const accounts: Account[] = [
     name: 'Lotus Cars',
     status: 'Processing',
     dateAdded: '2024-02-01',
-    avgSpeed: '3.2 hrs',
+    industry: 'Automotive',
     headcount: 8,
     publications: {
       financial: {
@@ -51,7 +56,7 @@ const accounts: Account[] = [
     name: 'Volvo',
     status: 'Active',
     dateAdded: '2024-03-10',
-    avgSpeed: '0.8 hrs',
+    industry: 'Automotive',
     headcount: 10,
     publications: {
       financial: {
@@ -71,7 +76,7 @@ const accounts: Account[] = [
     name: 'Tesla',
     status: 'Active',
     dateAdded: '2024-04-05',
-    avgSpeed: '2.1 hrs',
+    industry: 'Automotive',
     headcount: 15,
     publications: {
       financial: {
@@ -91,7 +96,7 @@ const accounts: Account[] = [
     name: 'Sony',
     status: 'Processing',
     dateAdded: '2024-05-01',
-    avgSpeed: '3.8 hrs',
+    industry: 'Technology',
     headcount: 12,
     publications: {
       financial: {
@@ -108,7 +113,7 @@ const accounts: Account[] = [
   }
 ];
 
-export const AccountsTable = () => {
+export const AccountsTable = ({ accounts = fallbackAccounts }: AccountsTableProps) => {
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200">
@@ -142,8 +147,8 @@ export const AccountsTable = () => {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(account.dateAdded).toLocaleDateString()}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {account.avgSpeed}
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {account.industry}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {account.headcount}

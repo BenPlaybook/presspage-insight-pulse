@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import AISummary from '@/components/AISummary';
@@ -6,407 +6,115 @@ import { AccountHeader } from '@/components/account/AccountHeader';
 import { AccountMetrics } from '@/components/account/AccountMetrics';
 import { AccountTabs } from '@/components/account/AccountTabs';
 import { Publication } from '@/types/publications';
+import { databaseService } from '@/services/databaseService';
+import { Account as SupabaseAccount } from '@/types/database';
+import { accountAdapter } from '@/services/accountAdapter';
+import { publicationAdapter } from '@/services/publicationAdapter';
 
-// Mock publications data
-const mockPublications: Publication[] = [
-  {
-    id: '101',
-    title: 'Q3 2024 Financial Results',
-    status: 'Completed',
-    detectedDate: '2025-01-15',
-    classification: 'Financial',
-    serpPosition: {
-      na: 1,
-      eu: 3
-    },
-    socialCoverage: {
-      matched: 3,
-      total: 3,
-      platforms: [
-        {
-          platform: 'Twitter',
-          matched: true,
-          timeDifference: '0.8 hrs',
-          postDate: '2025-01-15',
-          url: '#'
-        },
-        {
-          platform: 'LinkedIn',
-          matched: true,
-          timeDifference: '1.2 hrs',
-          postDate: '2025-01-15',
-          url: '#'
-        },
-        {
-          platform: 'Facebook',
-          matched: true,
-          timeDifference: '1.5 hrs',
-          postDate: '2025-01-15',
-          url: '#'
+const AccountDetails = () => {
+  const { id } = useParams<{ id: string }>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredPublications, setFilteredPublications] = useState<Publication[]>([]);
+  const [publications, setPublications] = useState<Publication[]>([]);
+  const [account, setAccount] = useState<SupabaseAccount | null>(null);
+  const [distributionChannels, setDistributionChannels] = useState<any[]>([]);
+  const [distributionTime, setDistributionTime] = useState<{ averageHours: number; trend: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Load account data and publications from Supabase
+  useEffect(() => {
+    const loadAccountData = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        
+        // Load account data
+        const { data: accountData, error: accountError } = await databaseService.getAccountById(id);
+        
+        if (accountError) {
+          console.error('Error loading account:', accountError);
+          setError('Failed to load account');
+          return;
         }
-      ]
-    },
-    distributionTime: '0.8 hours',
-    totalLocations: 3,
-    serpResults: [
-      {
-        region: 'NA',
-        position: 1,
-        url: 'https://example.com/news/financial-results',
-        detected: '2025-01-15',
-        title: 'Q3 2024 Financial Results',
-        articleDate: '2025-01-15',
-        matchStatus: 'Exact Match',
-        confidence: 'High',
-        reasoning: 'Exact title match',
-        domain: 'example.com',
-        searchQuery: 'financial results shopify',
-        searchType: 'google',
-        partialMatch: false
-      },
-      {
-        region: 'EU',
-        position: 3,
-        url: 'https://example.eu/news/financial-results',
-        detected: '2025-01-15',
-        title: 'Q3 2024 Financial Results',
-        articleDate: '2025-01-15',
-        matchStatus: 'Exact Match',
-        confidence: 'High',
-        reasoning: 'Exact title match',
-        domain: 'example.eu',
-        searchQuery: 'financial results shopify',
-        searchType: 'google',
-        partialMatch: false
-      }
-    ],
-    trackingPeriod: {
-      start: '2025-01-15',
-      end: '2025-02-15'
-    },
-    socialMatches: {
-      twitter: {
-        matched: true,
-        timeDifference: '0.8 hrs'
-      },
-      linkedin: {
-        matched: true,
-        timeDifference: '1.2 hrs'
-      }
-    }
-  },
-  {
-    id: '102',
-    title: 'New Product Launch Announcement for Shopify Commerce Platform with Enhanced Features',
-    status: 'In Progress',
-    detectedDate: '2025-01-12',
-    classification: 'Non-Financial',
-    serpPosition: {
-      na: 2,
-      eu: 4
-    },
-    socialCoverage: {
-      matched: 2,
-      total: 2,
-      platforms: [
-        {
-          platform: 'Twitter',
-          matched: true,
-          timeDifference: '1.1 hrs',
-          postDate: '2025-01-12',
-          url: '#'
-        },
-        {
-          platform: 'LinkedIn',
-          matched: true,
-          timeDifference: '1.8 hrs',
-          postDate: '2025-01-12',
-          url: '#'
+        
+        setAccount(accountData);
+        
+        // Load publications for this account (last 30 days)
+        const { data: publicationsData, error: publicationsError } = await databaseService.getPublicationsLast30Days(id);
+        
+        if (publicationsError) {
+          console.error('Error loading publications:', publicationsError);
+          // Don't set error here, just log it
+        } else {
+          // Convert publications to frontend format
+          const convertedPublications = publicationAdapter.fromSupabaseArray(publicationsData || []);
+          setPublications(convertedPublications);
+          setFilteredPublications(convertedPublications);
         }
-      ]
-    },
-    distributionTime: '1.3 hours',
-    totalLocations: 2,
-    serpResults: [
-      {
-        region: 'NA',
-        position: 2,
-        url: 'https://example.com/news/product-launch',
-        detected: '2025-01-12',
-        title: 'New Product Launch',
-        articleDate: '2025-01-12',
-        matchStatus: 'Partial Match',
-        confidence: 'Medium',
-        reasoning: 'Title matches partially',
-        domain: 'example.com',
-        searchQuery: 'shopify product launch',
-        searchType: 'google',
-        partialMatch: true
-      },
-      {
-        region: 'EU',
-        position: 4,
-        url: 'https://example.eu/news/product-launch',
-        detected: '2025-01-12',
-        title: 'New Product Launch',
-        articleDate: '2025-01-12',
-        matchStatus: 'Partial Match',
-        confidence: 'Medium',
-        reasoning: 'Title matches partially',
-        domain: 'example.eu',
-        searchQuery: 'shopify product launch',
-        searchType: 'google',
-        partialMatch: true
-      }
-    ],
-    trackingPeriod: {
-      start: '2025-01-12',
-      end: '2025-02-12'
-    },
-    socialMatches: {
-      twitter: {
-        matched: true,
-        timeDifference: '1.1 hrs'
-      },
-      linkedin: {
-        matched: true,
-        timeDifference: '1.8 hrs'
-      }
-    }
-  },
-  {
-    id: '103',
-    title: 'Partnership with Leading Tech Company',
-    status: 'Pending',
-    detectedDate: '2025-01-08',
-    classification: 'Non-Financial',
-    serpPosition: {
-      na: 4,
-      eu: 6
-    },
-    socialCoverage: {
-      matched: 2,
-      total: 3,
-      platforms: [
-        {
-          platform: 'Twitter',
-          matched: true,
-          timeDifference: '1.5 hrs',
-          postDate: '2025-01-08',
-          url: '#'
-        },
-        {
-          platform: 'LinkedIn',
-          matched: true,
-          timeDifference: '2.1 hrs',
-          postDate: '2025-01-08',
-          url: '#'
-        },
-        {
-          platform: 'Facebook',
-          matched: false,
-          timeDifference: 'N/A',
-          postDate: 'N/A',
-          url: '#'
-        }
-      ]
-    },
-    distributionTime: '1.8 hours',
-    totalLocations: 3,
-    serpResults: [
-      {
-        region: 'NA',
-        position: 4,
-        url: 'https://example.com/news/partnership',
-        detected: '2025-01-08',
-        title: 'Partnership Announcement',
-        articleDate: '2025-01-08',
-        matchStatus: 'Partial Match',
-        confidence: 'Medium',
-        reasoning: 'Title matches partially',
-        domain: 'example.com',
-        searchQuery: 'shopify partnership',
-        searchType: 'google',
-        partialMatch: true
-      },
-      {
-        region: 'EU',
-        position: 6,
-        url: 'https://example.eu/news/partnership',
-        detected: '2025-01-08',
-        title: 'Partnership Announcement',
-        articleDate: '2025-01-08',
-        matchStatus: 'Partial Match',
-        confidence: 'Medium',
-        reasoning: 'Title matches partially',
-        domain: 'example.eu',
-        searchQuery: 'shopify partnership',
-        searchType: 'google',
-        partialMatch: true
-      }
-    ],
-    trackingPeriod: {
-      start: '2025-01-08',
-      end: '2025-02-08'
-    },
-    socialMatches: {
-      twitter: {
-        matched: true,
-        timeDifference: '1.5 hrs'
-      },
-      linkedin: {
-        matched: true,
-        timeDifference: '2.1 hrs'
-      }
-    }
-  },
-  {
-    id: '104',
-    title: 'Leadership Team Changes Announcement',
-    status: 'Analyzing',
-    detectedDate: '2025-01-05',
-    classification: 'Financial',
-    serpPosition: {
-      na: 0,
-      eu: 0
-    },
-    socialCoverage: {
-      matched: 0,
-      total: 3,
-      platforms: []
-    },
-    distributionTime: 'Pending',
-    totalLocations: 0,
-    serpResults: [],
-    trackingPeriod: {
-      start: '2025-01-05',
-      end: '2025-02-05'
-    },
-    socialMatches: {
-      twitter: {
-        matched: false
-      },
-      linkedin: {
-        matched: false
-      }
-    }
-  },
-  {
-    id: '105',
-    title: 'Annual Sustainability Report',
-    status: 'Completed',
-    detectedDate: '2024-12-28',
-    classification: 'Non-Financial',
-    serpPosition: {
-      na: 3,
-      eu: 5
-    },
-    socialCoverage: {
-      matched: 3,
-      total: 3,
-      platforms: [
-        {
-          platform: 'Twitter',
-          matched: true,
-          timeDifference: '0.9 hrs',
-          postDate: '2024-12-28',
-          url: '#'
-        },
-        {
-          platform: 'LinkedIn',
-          matched: true,
-          timeDifference: '1.4 hrs',
-          postDate: '2024-12-28',
-          url: '#'
-        },
-        {
-          platform: 'Facebook',
-          matched: true,
-          timeDifference: '1.6 hrs',
-          postDate: '2024-12-28',
-          url: '#'
-        }
-      ]
-    },
-    distributionTime: '1.2 hours',
-    totalLocations: 3,
-    serpResults: [
-      {
-        region: 'NA',
-        position: 3,
-        url: 'https://example.com/news/sustainability',
-        detected: '2024-12-28',
-        title: 'Annual Sustainability Report',
-        articleDate: '2024-12-28',
-        matchStatus: 'Exact Match',
-        confidence: 'High',
-        reasoning: 'Exact title match',
-        domain: 'example.com',
-        searchQuery: 'shopify sustainability',
-        searchType: 'google',
-        partialMatch: false
-      },
-      {
-        region: 'EU',
-        position: 5,
-        url: 'https://example.eu/news/sustainability',
-        detected: '2024-12-28',
-        title: 'Annual Sustainability Report',
-        articleDate: '2024-12-28',
-        matchStatus: 'Exact Match',
-        confidence: 'High',
-        reasoning: 'Exact title match',
-        domain: 'example.eu',
-        searchQuery: 'shopify sustainability',
-        searchType: 'google',
-        partialMatch: false
-      }
-    ],
-    trackingPeriod: {
-      start: '2024-12-28',
-      end: '2025-01-28'
-    },
-    socialMatches: {
-      twitter: {
-        matched: true,
-        timeDifference: '0.9 hrs'
-      },
-      linkedin: {
-        matched: true,
-        timeDifference: '1.4 hrs'
-      }
-    }
-  }
-];
 
-// Mock account data
-const accountData = {
-  id: '1',
-  name: 'Shopify',
-  url: 'shopify.com',
-  status: 'Active',
-  lastAnalyzed: '3 hours ago',
-  performanceScore: 85,
-  metrics: {
-    publications: {
-      count: 47,
-      period: 'Last 30 days'
+
+
+        // Load distribution channels for this account
+        const { data: channelsData, error: channelsError } = await databaseService.getDistributionChannels(id);
+        
+        if (channelsError) {
+          console.error('Error loading distribution channels:', channelsError);
+          // Don't set error here, just log it
+        } else {
+          setDistributionChannels(channelsData || []);
+        }
+
+        // Load average distribution time for this account
+        const { averageHours, trend, error: timeError } = await databaseService.getAverageDistributionTime(id);
+        
+        if (timeError) {
+          console.error('Error loading distribution time:', timeError);
+          // Don't set error here, just log it
+        } else {
+          setDistributionTime({ averageHours, trend });
+        }
+      } catch (err) {
+        console.error('Error loading account data:', err);
+        setError('Failed to load account data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAccountData();
+  }, [id]);
+
+  // Convert account data to frontend format
+  const accountData = account ? {
+    id: account.id,
+    name: account.name,
+    url: account.main_website_url || 'N/A',
+    status: account.is_actively_tracked ? 'Active' : 'Inactive',
+    lastAnalyzed: '3 hours ago', // This would need to be calculated from actual data
+    performanceScore: 85, // This would need to be calculated from actual data
+    metrics: {
+      publications: {
+        count: publications.length, // Use real publications count
+        period: 'Last 30 days'
+      },
+          channels: {
+      count: distributionChannels.length, // Use real channels count
+      description: 'Active channels',
+      channels: distributionChannels // Pass the actual channels data
     },
-    channels: {
-      count: 5,
-      description: 'Active channels'
+          distributionTime: {
+      value: distributionTime ? `${distributionTime.averageHours} hrs` : 'N/A',
+      trend: distributionTime?.trend || 'No data available'
     },
-    distributionTime: {
-      value: '1.5 hrs',
-      trend: '20% vs last month'
+      serpPosition: {
+        value: '#3', // This would need to be calculated from publications
+        positions: '+2 positions'
+      }
     },
-    serpPosition: {
-      value: '#3',
-      positions: '+2 positions'
-    }
-  },
-  aiSummary: {
-    internal: `### Key Performance Insights
+    aiSummary: {
+      internal: account.ai_performance_summary || `### Key Performance Insights
 * Distribution efficiency at 1.5 hours average - **20% improvement** from last month
 * Twitter channel showing 2.3 hours delay - requires optimization
 * Product updates coverage gap in newsroom (40% below target)
@@ -416,7 +124,7 @@ const accountData = {
 1. Optimize social media scheduling
 2. Increase newsroom product coverage
 3. Review LinkedIn distribution strategy`,
-    customer: `### Performance Overview
+      customer: account.ai_performance_summary || `### Performance Overview
 * Consistently fast distribution across channels
 * Strong social media presence with multi-channel coverage
 * Comprehensive newsroom content strategy
@@ -426,13 +134,8 @@ const accountData = {
 * Enhanced social media timing optimization
 * Expanded product update coverage
 * Strengthened LinkedIn presence`
-  }
-};
-
-const AccountDetails = () => {
-  const { id } = useParams<{ id: string }>();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filteredPublications, setFilteredPublications] = useState(mockPublications);
+    }
+  } : null;
   
   const itemsPerPage = 4;
   const totalPages = Math.ceil(filteredPublications.length / itemsPerPage);
@@ -442,12 +145,43 @@ const AccountDetails = () => {
   );
   
   const handleSearchChange = (search: string) => {
-    const filtered = mockPublications.filter(
-      pub => pub.title.toLowerCase().includes(search.toLowerCase())
-    );
-    setFilteredPublications(filtered);
+    if (!search.trim()) {
+      setFilteredPublications(publications);
+    } else {
+      const filtered = publications.filter(
+        pub => pub.title.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredPublications(filtered);
+    }
     setCurrentPage(1);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header variant="account" title="Loading..." />
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-presspage-blue"></div>
+            <span className="ml-2 text-gray-600">Loading account...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !accountData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header variant="account" title="Error" />
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-8">
+            <span className="text-red-600">{error || 'Account not found'}</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gray-50">

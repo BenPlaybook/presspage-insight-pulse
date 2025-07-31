@@ -9,7 +9,7 @@ export const AccountsTableHeader = () => (
         Date Added
       </th>
       <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-        Avg. Speed
+        Industry
       </th>
       <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
         PR & Comms Headcount

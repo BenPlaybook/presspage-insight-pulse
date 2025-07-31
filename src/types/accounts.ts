@@ -10,7 +10,7 @@ export type Account = {
   name: string;
   status: 'Active' | 'Processing';
   dateAdded: string;
-  avgSpeed: string;
+  industry: string;
   headcount: number;
   publications: {
     financial: Publication;

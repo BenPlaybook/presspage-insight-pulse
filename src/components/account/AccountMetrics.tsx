@@ -13,6 +13,7 @@ interface AccountMetricsProps {
     channels: {
       count: number;
       description: string;
+      channels?: any[]; // Add channels data
     };
     distributionTime: {
       value: string;
@@ -26,14 +27,40 @@ interface AccountMetricsProps {
 }
 
 export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
-  // Mock distribution channels data - in real app this would come from props
-  const distributionChannels = [
-    { name: 'Twitter', icon: Twitter },
-    { name: 'LinkedIn', icon: Linkedin },
-    { name: 'Facebook', icon: Facebook },
-    { name: 'PR Newswire', icon: Newspaper },
-    { name: 'RSS Feeds', icon: Rss }
-  ];
+  // Use real distribution channels data or fallback to mock data
+  const distributionChannels = metrics.channels?.channels?.length > 0 
+    ? metrics.channels.channels.map((channel: any) => {
+        // Map source_type to display name and icon
+        const getChannelInfo = (sourceType: string) => {
+          switch (sourceType) {
+            case 'Twitter / X':
+              return { name: 'Twitter', icon: Twitter };
+            case 'Linkedin':
+              return { name: 'LinkedIn', icon: Linkedin };
+            case 'Facebook':
+              return { name: 'Facebook', icon: Facebook };
+            case 'media_room':
+              return { name: 'Media Room', icon: Newspaper };
+            default:
+              return { name: sourceType, icon: Globe };
+          }
+        };
+        
+        const channelInfo = getChannelInfo(channel.source_type);
+        return {
+          ...channelInfo,
+          id: channel.id,
+          source_type: channel.source_type,
+          status: channel.status
+        };
+      })
+    : [
+        { name: 'Twitter', icon: Twitter },
+        { name: 'LinkedIn', icon: Linkedin },
+        { name: 'Facebook', icon: Facebook },
+        { name: 'PR Newswire', icon: Newspaper },
+        { name: 'RSS Feeds', icon: Rss }
+      ];
 
   return (
     <TooltipProvider>
@@ -87,9 +114,18 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
               <p className="font-medium mb-2">Active distribution channels:</p>
               <ul className="text-sm space-y-1">
                 {distributionChannels.map((channel) => (
-                  <li key={channel.name} className="flex items-center space-x-2">
+                  <li key={channel.id || channel.name} className="flex items-center space-x-2">
                     <channel.icon className="w-3 h-3" />
                     <span>{channel.name}</span>
+                    {channel.status && (
+                      <span className={`text-xs px-1 rounded ${
+                        channel.status === 'active' ? 'bg-green-100 text-green-800' : 
+                        channel.status === 'inactive' ? 'bg-red-100 text-red-800' : 
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {channel.status}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

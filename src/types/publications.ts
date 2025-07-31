@@ -47,6 +47,8 @@ export type Publication = {
   totalLocations: number;
   content?: string;
   source?: string;
+  image?: string; // URL de la imagen del artículo
+  aiSummary?: any; // JSONB field from Supabase
   trackingPeriod?: {
     start: string;
     end: string;
