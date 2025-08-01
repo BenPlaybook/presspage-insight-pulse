@@ -12,9 +12,11 @@ type AISummaryProps = {
   accountId: string;
   summaryId: string;
   accountName?: string;
+  aiSummary?: any; // JSONB field from Supabase
+  customerAiSummary?: any; // JSONB field for customer summary from accounts
 };
 
-const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, accountName = "Account" }: AISummaryProps) => {
+const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, accountName = "Account", aiSummary, customerAiSummary }: AISummaryProps) => {
   const [activeVersion, setActiveVersion] = React.useState<string>('internal');
   const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
 
@@ -73,7 +75,10 @@ const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, acc
         <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-sm text-white leading-relaxed">
           <div className="prose prose-invert prose-sm max-w-none">
             <ReactMarkdown>
-              {activeVersion === 'internal' ? internalSummary : customerSummary}
+              {activeVersion === 'internal' 
+                ? (aiSummary || internalSummary) 
+                : (customerAiSummary || customerSummary)
+              }
             </ReactMarkdown>
           </div>
         </div>

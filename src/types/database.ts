@@ -8,6 +8,7 @@ export interface Account {
   pr_comms_headcount: number;
   is_actively_tracked: boolean;
   ai_performance_summary: string;
+  customer_ai_summary?: any; // JSONB para el resumen del cliente
   created_at: string;
   updated_at: string;
   airtable_account_id_original: string;

@@ -198,11 +198,13 @@ const AccountDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
           <div className="lg:col-span-3">
             <AISummary 
-              internalSummary={accountData.aiSummary.internal}
-              customerSummary={accountData.aiSummary.customer}
+              internalSummary={account?.ai_performance_summary || "No internal analysis available"}
+              customerSummary={account?.customer_ai_summary || "No customer summary available"}
               accountId={id || '1'}
               summaryId={`summary-${id || '1'}-${Date.now()}`}
               accountName={accountData.name}
+              aiSummary={account?.ai_performance_summary}
+              customerAiSummary={account?.customer_ai_summary}
             />
           </div>
           

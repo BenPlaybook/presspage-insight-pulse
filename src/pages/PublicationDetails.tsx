@@ -10,17 +10,18 @@ import { SerpResultsTable } from '@/components/publications/SerpResultsTable';
 import { SocialCoverageTable } from '@/components/publications/SocialCoverageTable';
 import { PublicationMetrics } from '@/components/publications/PublicationMetrics';
 import { ArticleInformation } from '@/components/publications/ArticleInformation';
+import AISummary from '@/components/AISummary';
 import { Publication } from '@/types/publications';
 import { databaseService } from '@/services/databaseService';
 import { publicationAdapter } from '@/services/publicationAdapter';
 import { Account as SupabaseAccount } from '@/types/database';
+import { supabase } from '@/lib/supabase';
 
 const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const [publication, setPublication] = useState<Publication | null>(null);
   const [account, setAccount] = useState<SupabaseAccount | null>(null);
-  const [aiSummary, setAiSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -49,19 +50,21 @@ const PublicationDetails = () => {
         // Convert publication to frontend format
         const convertedPublication = publicationAdapter.fromSupabase(publicationData);
         setPublication(convertedPublication);
+        
+        // Load account data with specific fields to debug
+        const { data: accountData, error: accountError } = await supabase
+          .from('accounts')
+          .select('id, name, ai_performance_summary, customer_ai_summary')
+          .eq('id', id)
+          .single();
 
-        // Extract AI summary from the publication
-        if (publicationData.ai_summary) {
-          setAiSummary(publicationData.ai_summary);
-        }
-        
-        // Load account data
-        const { data: accountData, error: accountError } = await databaseService.getAccountById(id);
-        
         if (accountError) {
           console.error('Error loading account:', accountError);
           // Don't set error here, just log it
         } else {
+          console.log('Raw account data from Supabase:', accountData);
+          console.log('ai_performance_summary:', accountData.ai_performance_summary);
+          console.log('customer_ai_summary:', accountData.customer_ai_summary);
           setAccount(accountData);
         }
       } catch (err) {
@@ -134,69 +137,18 @@ const PublicationDetails = () => {
         <PublicationMetrics publication={publication} />
         
         {/* AI Summary Section */}
-        {aiSummary && (
+        {(account?.ai_performance_summary || account?.customer_ai_summary) && (
           <div className="mb-6">
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden relative">
-              {/* Animated background effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 animate-pulse"></div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600"></div>
-              
-              <CardContent className="p-6 relative z-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">AI Analysis</h3>
-                    <p className="text-cyan-300 text-sm">Powered by Advanced Analytics</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {aiSummary.internal && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                        <h4 className="font-semibold text-cyan-300 text-sm uppercase tracking-wide">Internal Analysis</h4>
-                      </div>
-                      <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
-                        {aiSummary.internal}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {aiSummary.customer && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                        <h4 className="font-semibold text-purple-300 text-sm uppercase tracking-wide">Customer Summary</h4>
-                      </div>
-                      <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
-                        {aiSummary.customer}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Action buttons */}
-                <div className="flex items-center gap-3 mt-6 pt-4 border-t border-slate-700">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                    </svg>
-                    Share
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition-all duration-200">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    Export
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+
+            <AISummary
+              internalSummary={account?.ai_performance_summary || "No internal analysis available"}
+              customerSummary={account?.customer_ai_summary || "No customer summary available"}
+              accountId={id || ""}
+              summaryId={publicationId || ""}
+              accountName={account?.name || "Account"}
+              aiSummary={account?.ai_performance_summary}
+              customerAiSummary={account?.customer_ai_summary || "This is the CUSTOMER summary - different from internal"}
+            />
           </div>
         )}
         

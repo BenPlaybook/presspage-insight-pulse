@@ -95,7 +95,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
                         const IconComponent = channel.icon;
                         return (
                           <IconComponent 
-                            key={channel.name} 
+                            key={`${channel.name}-${index}`} 
                             className="w-4 h-4 text-gray-400" 
                           />
                         );
@@ -113,8 +113,8 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
             <div>
               <p className="font-medium mb-2">Active distribution channels:</p>
               <ul className="text-sm space-y-1">
-                {distributionChannels.map((channel) => (
-                  <li key={channel.id || channel.name} className="flex items-center space-x-2">
+                {distributionChannels.map((channel, index) => (
+                  <li key={channel.id || `${channel.name}-${index}`} className="flex items-center space-x-2">
                     <channel.icon className="w-3 h-3" />
                     <span>{channel.name}</span>
                     {channel.status && (
