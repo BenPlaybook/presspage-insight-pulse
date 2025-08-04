@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Publication } from '@/types/publications';
 import { PublicationsTable } from '@/components/publications/PublicationsTable';
 import { PublicationsFilters } from '@/components/publications/PublicationsFilters';
@@ -66,44 +65,29 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
   }, [publications]);
   return (
     <>
-      <Tabs defaultValue="publications" className="w-full">
-        <TabsList className="w-full mb-6 border-b">
-          <TabsTrigger value="publications" className="text-sm">Publications</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-sm">Analytics</TabsTrigger>
-          <TabsTrigger value="settings" className="text-sm">Settings</TabsTrigger>
-        </TabsList>
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Publications</h2>
+          <p className="text-sm text-gray-500">View and manage account publications</p>
+        </div>
         
-        <TabsContent value="publications" className="bg-white rounded-lg shadow-sm p-6">
-          <PublicationsFilters 
-            onSearchChange={onSearchChange}
-          />
-          
-          <PublicationsTable 
-            publications={sortedPublications} 
-            onSort={handleSort}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-          />
-          
-          <PublicationsPagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-          />
-        </TabsContent>
+        <PublicationsFilters 
+          onSearchChange={onSearchChange}
+        />
         
-        <TabsContent value="analytics">
-          <div className="bg-white rounded-lg shadow-sm p-6 h-64 flex items-center justify-center">
-            <p className="text-gray-500">Analytics content will appear here</p>
-          </div>
-        </TabsContent>
+        <PublicationsTable 
+          publications={sortedPublications} 
+          onSort={handleSort}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+        />
         
-        <TabsContent value="settings">
-          <div className="bg-white rounded-lg shadow-sm p-6 h-64 flex items-center justify-center">
-            <p className="text-gray-500">Settings content will appear here</p>
-          </div>
-        </TabsContent>
-      </Tabs>
+        <PublicationsPagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+        />
+      </div>
       
       <StickyBenchmarkButton />
     </>

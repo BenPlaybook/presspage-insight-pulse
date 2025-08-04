@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
-import AISummary from '@/components/AISummary';
+import AccountInsights from '@/components/account/AccountInsights';
 import { AccountHeader } from '@/components/account/AccountHeader';
 import { AccountMetrics } from '@/components/account/AccountMetrics';
 import { AccountTabs } from '@/components/account/AccountTabs';
@@ -226,37 +226,19 @@ const AccountDetails = () => {
           url={accountData.url}
           status={accountData.status}
           lastAnalyzed={accountData.lastAnalyzed}
+          performanceScore={accountData.performanceScore}
         />
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-          <div className="lg:col-span-3">
-            <AISummary 
-              internalSummary={extractTextFromJSONB(account?.ai_performance_summary) || "No internal analysis available"}
-              customerSummary={extractTextFromJSONB(account?.customer_ai_summary) || "No customer summary available"}
-              accountId={id || '1'}
-              summaryId={`summary-${id || '1'}-${Date.now()}`}
-              accountName={accountData.name}
-              aiSummary={extractTextFromJSONB(account?.ai_performance_summary)}
-              customerAiSummary={extractTextFromJSONB(account?.customer_ai_summary)}
-            />
-          </div>
-          
-          <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-presspage-teal mb-2">
-                  {accountData.performanceScore}
-                </div>
-                <div className="text-sm font-medium text-gray-900 mb-2">
-                  PR Performance Score
-                </div>
-                <div className="text-xs text-gray-500">
-                  Based on distribution speed, coverage reach, and search visibility. 
-                  Scores above 80 indicate excellent performance.
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="mb-6">
+          <AccountInsights 
+            internalSummary={extractTextFromJSONB(account?.ai_performance_summary) || "No internal analysis available"}
+            customerSummary={extractTextFromJSONB(account?.customer_ai_summary) || "No customer summary available"}
+            accountId={id || '1'}
+            summaryId={`summary-${id || '1'}-${Date.now()}`}
+            accountName={accountData.name}
+            aiSummary={extractTextFromJSONB(account?.ai_performance_summary)}
+            customerAiSummary={extractTextFromJSONB(account?.customer_ai_summary)}
+          />
         </div>
         
         <AccountMetrics metrics={accountData.metrics} />

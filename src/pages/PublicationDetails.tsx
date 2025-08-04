@@ -10,12 +10,37 @@ import { SerpResultsTable } from '@/components/publications/SerpResultsTable';
 import { SocialCoverageTable } from '@/components/publications/SocialCoverageTable';
 import { PublicationMetrics } from '@/components/publications/PublicationMetrics';
 import { ArticleInformation } from '@/components/publications/ArticleInformation';
-import AISummary from '@/components/AISummary';
 import { Publication } from '@/types/publications';
 import { databaseService } from '@/services/databaseService';
 import { publicationAdapter } from '@/services/publicationAdapter';
 import { Account as SupabaseAccount } from '@/types/database';
 import { supabase } from '@/lib/supabase';
+
+// Helper function to generate appropriate titles for social media posts
+const generatePublicationTitle = (publication: Publication): string => {
+  const detectedDate = new Date(publication.detectedDate);
+  const formattedDate = detectedDate.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+  
+  // Check if it's a social media post based on source or content
+  const isSocialMedia = publication.source?.includes('linkedin.com') || 
+                       publication.source?.includes('twitter.com') ||
+                       publication.source?.includes('x.com') ||
+                       publication.title?.toLowerCase().includes('linkedin') ||
+                       publication.title?.toLowerCase().includes('twitter');
+  
+  if (isSocialMedia) {
+    if (publication.source?.includes('linkedin.com')) {
+      return `LinkedIn Post ${formattedDate}`;
+    } else if (publication.source?.includes('twitter.com') || publication.source?.includes('x.com')) {
+      return `Twitter Post ${formattedDate}`;
+    } else {
+      return `Social Media Post ${formattedDate}`;
+    }
+  }
+  
+  // For regular articles, use the original title
+  return publication.title;
+};
 
 const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
@@ -120,37 +145,31 @@ const PublicationDetails = () => {
         </div>
         
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-[#122F4A]">{publication.title}</h1>
-            <div className="flex flex-col md:flex-row md:items-center gap-2 mt-2">
-              <span className="text-sm text-gray-500">Source: {publication.source || 'N/A'}</span>
-              <span className="hidden md:block text-gray-300 mx-2">•</span>
-              <span className="text-sm text-gray-500">Detected: {new Date(publication.detectedDate).toLocaleDateString()}</span>
-              <span className="hidden md:block text-gray-300 mx-2">•</span>
-              <span className="text-sm text-gray-500">Classification: {publication.classification}</span>
-              <span className="hidden md:block text-gray-300 mx-2">•</span>
-              <span className="text-sm text-gray-500">Tracking Period: {publication.trackingPeriod.start} - {publication.trackingPeriod.end}</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-bold text-[#122F4A]">{generatePublicationTitle(publication)}</h1>
+              <div className="flex flex-col md:flex-row md:items-center gap-2 mt-2">
+                <span className="text-sm text-gray-500">Detected: {new Date(publication.detectedDate).toLocaleDateString()}</span>
+                <span className="hidden md:block text-gray-300 mx-2">•</span>
+                <span className="text-sm text-gray-500">Classification: {publication.classification}</span>
+                <span className="hidden md:block text-gray-300 mx-2">•</span>
+                <span className="text-sm text-gray-500">Tracking Period: {publication.trackingPeriod.start} - {publication.trackingPeriod.end}</span>
+              </div>
             </div>
+            {publication.source && (
+              <a 
+                href={publication.source} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-presspage-teal hover:bg-presspage-teal/90 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Go to Article
+              </a>
+            )}
           </div>
         </div>
         
         <PublicationMetrics publication={publication} />
-        
-        {/* AI Summary Section */}
-        {(account?.ai_performance_summary || account?.customer_ai_summary) && (
-          <div className="mb-6">
-
-            <AISummary
-              internalSummary={account?.ai_performance_summary || "No internal analysis available"}
-              customerSummary={account?.customer_ai_summary || "No customer summary available"}
-              accountId={id || ""}
-              summaryId={publicationId || ""}
-              accountName={account?.name || "Account"}
-              aiSummary={account?.ai_performance_summary}
-              customerAiSummary={account?.customer_ai_summary || "This is the CUSTOMER summary - different from internal"}
-            />
-          </div>
-        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <MetricCard
@@ -209,16 +228,8 @@ const PublicationDetails = () => {
                     </div>
                   )}
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">{publication.title}</p>
+                        <p className="text-sm font-medium">{generatePublicationTitle(publication)}</p>
                         <p className="text-xs text-gray-500 line-clamp-3">{publication.content || 'No content available'}</p>
-                        <a 
-                          href={publication.source} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs text-presspage-teal hover:text-opacity-80"
-                        >
-                          View original article →
-                        </a>
                       </div>
                     </CardContent>
                   </Card>
@@ -291,16 +302,8 @@ const PublicationDetails = () => {
                     </div>
                   )}
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">{publication.title}</p>
+                    <p className="text-sm font-medium">{generatePublicationTitle(publication)}</p>
                     <p className="text-xs text-gray-500 line-clamp-3">{publication.content || 'No content available'}</p>
-                    <a 
-                      href={publication.source} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs text-presspage-teal hover:text-opacity-80"
-                    >
-                      View original article →
-                    </a>
                   </div>
                 </CardContent>
               </Card>

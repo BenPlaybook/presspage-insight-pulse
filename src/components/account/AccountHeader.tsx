@@ -7,13 +7,15 @@ interface AccountHeaderProps {
   url: string;
   status: string;
   lastAnalyzed: string;
+  performanceScore?: number;
 }
 
 export const AccountHeader: React.FC<AccountHeaderProps> = ({
   name,
   url,
   status,
-  lastAnalyzed
+  lastAnalyzed,
+  performanceScore
 }) => {
   return (
     <>
@@ -27,9 +29,21 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
             <h1 className="text-2xl font-bold text-[#122F4A]">{name}</h1>
             <p className="text-sm text-gray-500">{url} • {status} • Last analyzed: {lastAnalyzed}</p>
           </div>
-          <button className="bg-presspage-teal text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors">
-            Run Analysis
-          </button>
+          <div className="flex items-center gap-4">
+            {performanceScore !== undefined && (
+              <div className="text-center">
+                <div className="text-3xl font-bold text-presspage-teal">
+                  {performanceScore}
+                </div>
+                <div className="text-xs text-gray-500">
+                  PR Score
+                </div>
+              </div>
+            )}
+            <button className="bg-presspage-teal text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors">
+              Run Analysis
+            </button>
+          </div>
         </div>
       </div>
     </>
