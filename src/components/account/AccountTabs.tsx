@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Publication } from '@/types/publications';
 import { PublicationsTable } from '@/components/publications/PublicationsTable';
@@ -24,6 +24,46 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
   onPageChange,
   onSearchChange,
 }) => {
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortedPublications, setSortedPublications] = useState<Publication[]>(publications);
+
+  const handleSort = (column: string) => {
+    const newDirection = sortColumn === column && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortColumn(column);
+    setSortDirection(newDirection);
+
+    const sorted = [...publications].sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (column) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'detectedDate':
+          aValue = new Date(a.detectedDate).getTime();
+          bValue = new Date(b.detectedDate).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (newDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+
+    setSortedPublications(sorted);
+  };
+
+  // Update sorted publications when publications prop changes
+  useEffect(() => {
+    setSortedPublications(publications);
+  }, [publications]);
   return (
     <>
       <Tabs defaultValue="publications" className="w-full">
@@ -38,7 +78,12 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
             onSearchChange={onSearchChange}
           />
           
-          <PublicationsTable publications={publications} />
+          <PublicationsTable 
+            publications={sortedPublications} 
+            onSort={handleSort}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+          />
           
           <PublicationsPagination 
             currentPage={currentPage}

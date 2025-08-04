@@ -91,7 +91,10 @@ const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, acc
         summaryId={summaryId}
         accountName={accountName}
         summaryType={activeVersion as 'internal' | 'customer'}
-        summaryContent={activeVersion === 'internal' ? internalSummary : customerSummary}
+        summaryContent={activeVersion === 'internal' 
+          ? (aiSummary || internalSummary) 
+          : (customerAiSummary || customerSummary)
+        }
       />
     </div>
   );

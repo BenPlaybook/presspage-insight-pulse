@@ -92,8 +92,12 @@ const Login = () => {
         <div className="w-full max-w-md">
           {/* Logo/Branding */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-presspage-blue rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-2xl font-bold">CA</span>
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/logo.png" 
+                alt="Presspage Logo" 
+                className="h-16 w-auto"
+              />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               {isLogin ? 'Welcome back' : 'Create your account'}

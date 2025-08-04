@@ -19,37 +19,37 @@ type BenchmarkAccount = {
 const benchmarkAccounts: BenchmarkAccount[] = [
   {
     id: '1',
-    name: 'Shopify',
-    avgSpeed: '1.5 hrs',
-    serpPosition: 3,
-    publications: 47,
-    socialCoverage: 95,
+    name: 'Coming Soon',
+    avgSpeed: '-',
+    serpPosition: 0,
+    publications: 0,
+    socialCoverage: 0,
     efficiencyScore: {
-      value: 92,
+      value: 0,
       total: 100
     }
   },
   {
     id: '2',
-    name: 'Lotus Cars',
-    avgSpeed: '3.2 hrs',
-    serpPosition: 8,
-    publications: 23,
-    socialCoverage: 75,
+    name: 'Coming Soon',
+    avgSpeed: '-',
+    serpPosition: 0,
+    publications: 0,
+    socialCoverage: 0,
     efficiencyScore: {
-      value: 68,
+      value: 0,
       total: 100
     }
   },
   {
     id: '3',
-    name: 'Volvo',
-    avgSpeed: '0.8 hrs',
-    serpPosition: 1,
-    publications: 62,
-    socialCoverage: 98,
+    name: 'Coming Soon',
+    avgSpeed: '-',
+    serpPosition: 0,
+    publications: 0,
+    socialCoverage: 0,
     efficiencyScore: {
-      value: 95,
+      value: 0,
       total: 100
     }
   }

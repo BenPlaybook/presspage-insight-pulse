@@ -11,6 +11,39 @@ import { Account as SupabaseAccount } from '@/types/database';
 import { accountAdapter } from '@/services/accountAdapter';
 import { publicationAdapter } from '@/services/publicationAdapter';
 
+// Helper function to extract text content from JSONB fields
+const extractTextFromJSONB = (jsonbContent: any): string => {
+  if (!jsonbContent) return '';
+  
+  // If it's already a string, return it
+  if (typeof jsonbContent === 'string') {
+    return jsonbContent;
+  }
+  
+  // If it's an object, try to extract text content
+  if (typeof jsonbContent === 'object') {
+    // If it has a 'content' or 'text' property
+    if (jsonbContent.content) return jsonbContent.content;
+    if (jsonbContent.text) return jsonbContent.text;
+    if (jsonbContent.summary) return jsonbContent.summary;
+    
+    // If it's an array, join the elements
+    if (Array.isArray(jsonbContent)) {
+      return jsonbContent.join('\n');
+    }
+    
+    // If it's an object with nested content, try to find text
+    const textContent = Object.values(jsonbContent)
+      .filter(value => typeof value === 'string')
+      .join('\n');
+    
+    if (textContent) return textContent;
+  }
+  
+  // Fallback: convert to string
+  return String(jsonbContent);
+};
+
 const AccountDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,8 +125,8 @@ const AccountDetails = () => {
     name: account.name,
     url: account.main_website_url || 'N/A',
     status: account.is_actively_tracked ? 'Active' : 'Inactive',
-    lastAnalyzed: '3 hours ago', // This would need to be calculated from actual data
-    performanceScore: 85, // This would need to be calculated from actual data
+    lastAnalyzed: 'Coming Soon', // This would need to be calculated from actual data
+    performanceScore: 0, // This would need to be calculated from actual data
     metrics: {
       publications: {
         count: publications.length, // Use real publications count
@@ -109,8 +142,8 @@ const AccountDetails = () => {
       trend: distributionTime?.trend || 'No data available'
     },
       serpPosition: {
-        value: '#3', // This would need to be calculated from publications
-        positions: '+2 positions'
+        value: 'Coming Soon', // This would need to be calculated from publications
+        positions: 'Coming Soon'
       }
     },
     aiSummary: {
@@ -198,13 +231,13 @@ const AccountDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
           <div className="lg:col-span-3">
             <AISummary 
-              internalSummary={account?.ai_performance_summary || "No internal analysis available"}
-              customerSummary={account?.customer_ai_summary || "No customer summary available"}
+              internalSummary={extractTextFromJSONB(account?.ai_performance_summary) || "No internal analysis available"}
+              customerSummary={extractTextFromJSONB(account?.customer_ai_summary) || "No customer summary available"}
               accountId={id || '1'}
               summaryId={`summary-${id || '1'}-${Date.now()}`}
               accountName={accountData.name}
-              aiSummary={account?.ai_performance_summary}
-              customerAiSummary={account?.customer_ai_summary}
+              aiSummary={extractTextFromJSONB(account?.ai_performance_summary)}
+              customerAiSummary={extractTextFromJSONB(account?.customer_ai_summary)}
             />
           </div>
           

@@ -32,6 +32,7 @@ const Index = () => {
   const [activeAccountsCount, setActiveAccountsCount] = useState(0);
   const [industries, setIndustries] = useState<string[]>([]);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const ITEMS_PER_PAGE = 10;
 
@@ -108,7 +109,7 @@ const Index = () => {
   const metrics = {
     totalAccounts: totalAccounts,
     activeTracking: activeAccountsCount,
-    averageDistributionTime: '2.3 hrs'
+    averageDistributionTime: 'Coming Soon'
   };
 
   // Handle search input with debounce
@@ -142,6 +143,11 @@ const Index = () => {
   // Handle pagination
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  // Handle sort toggle
+  const handleSort = () => {
+    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
   return (
@@ -221,7 +227,11 @@ const Index = () => {
             </div>
           ) : (
             <>
-              <AccountsTable accounts={accounts} />
+              <AccountsTable 
+                accounts={accounts} 
+                onSort={handleSort}
+                sortDirection={sortDirection}
+              />
               
               {/* Pagination */}
               {totalPages > 1 && (

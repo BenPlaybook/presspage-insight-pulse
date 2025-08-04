@@ -7,6 +7,8 @@ import { AccountsTableHeader } from './accounts/AccountsTableHeader';
 
 interface AccountsTableProps {
   accounts?: Account[];
+  onSort?: () => void;
+  sortDirection?: 'asc' | 'desc';
 }
 
 // Datos de fallback si no se proporcionan accounts
@@ -113,13 +115,21 @@ const fallbackAccounts: Account[] = [
   }
 ];
 
-export const AccountsTable = ({ accounts = fallbackAccounts }: AccountsTableProps) => {
+export const AccountsTable = ({ accounts = fallbackAccounts, onSort, sortDirection }: AccountsTableProps) => {
+  // Sort accounts alphabetically by name
+  const sortedAccounts = [...accounts].sort((a, b) => {
+    if (sortDirection === 'desc') {
+      return b.name.localeCompare(a.name);
+    }
+    return a.name.localeCompare(b.name);
+  });
+  
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200">
-        <AccountsTableHeader />
+        <AccountsTableHeader onSort={onSort} sortDirection={sortDirection} />
         <tbody className="bg-white divide-y divide-gray-200">
-          {accounts.map((account) => (
+          {sortedAccounts.map((account) => (
             <tr key={account.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">

@@ -11,7 +11,7 @@ import Benchmark from "./pages/Benchmark";
 import SharedSummary from "./pages/SharedSummary";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import { FeedbackButton } from "./components/FeedbackButton";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import EmailVerification from "./components/EmailVerification";
@@ -60,7 +60,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <FeedbackButton />
+
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

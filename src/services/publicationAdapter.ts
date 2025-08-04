@@ -19,33 +19,33 @@ export const publicationAdapter = {
         eu: supabasePublication.serp_position_eu || 0
       },
       socialCoverage: {
-        matched: 2, // This would need to be calculated from actual social data
-        total: 3,
+        matched: 0, // This would need to be calculated from actual social data
+        total: 0,
         platforms: [
                                 {
-                           platform: 'Twitter',
-               matched: true,
-               timeDifference: '0.8 hrs',
+                           platform: 'Coming Soon',
+               matched: false,
+               timeDifference: 'Coming Soon',
                postDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
                url: '#'
           },
                                 {
-                           platform: 'LinkedIn',
-               matched: true,
-               timeDifference: '1.2 hrs',
+                           platform: 'Coming Soon',
+               matched: false,
+               timeDifference: 'Coming Soon',
                postDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
                url: '#'
           },
           {
-            platform: 'Facebook',
+            platform: 'Coming Soon',
             matched: false,
-            timeDifference: 'N/A',
-            postDate: 'N/A',
+            timeDifference: 'Coming Soon',
+            postDate: 'Coming Soon',
             url: '#'
           }
         ]
       },
-      distributionTime: '1.2 hours', // This would need to be calculated from actual data
+      distributionTime: 'Coming Soon', // This would need to be calculated from actual data
       totalLocations: 3,
       content: supabasePublication.body_content || supabasePublication.summary || 'No content available',
       source: supabasePublication.article_url || 'N/A',
@@ -85,12 +85,12 @@ export const publicationAdapter = {
       ],
       socialMatches: {
         twitter: {
-          matched: true,
-          timeDifference: '0.8 hrs'
+          matched: false,
+          timeDifference: 'Coming Soon'
         },
         linkedin: {
-          matched: true,
-          timeDifference: '1.2 hrs'
+          matched: false,
+          timeDifference: 'Coming Soon'
         }
       }
     };

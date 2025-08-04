@@ -16,11 +16,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Publication } from '@/types/publications';
-import { Eye, CheckCircle, Clock, Circle, Search } from 'lucide-react';
+import { Eye, CheckCircle, Clock, Circle, Search, ChevronUp, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface PublicationsTableProps {
   publications: Publication[];
+  onSort?: (column: string) => void;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 const getStatusIcon = (status: string) => {
@@ -39,7 +42,10 @@ const getStatusIcon = (status: string) => {
 };
 
 export const PublicationsTable: React.FC<PublicationsTableProps> = ({ 
-  publications 
+  publications,
+  onSort,
+  sortColumn,
+  sortDirection
 }) => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -60,7 +66,15 @@ export const PublicationsTable: React.FC<PublicationsTableProps> = ({
               <TableHead>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="cursor-help">Article Title</span>
+                    <button 
+                      className="flex items-center gap-1 cursor-pointer hover:text-presspage-teal transition-colors"
+                      onClick={() => onSort?.('title')}
+                    >
+                      Article Title
+                      {sortColumn === 'title' && (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Title of the press release or article</p>
