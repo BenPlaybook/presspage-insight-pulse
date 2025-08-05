@@ -52,6 +52,10 @@ const AccountDetails = () => {
   const [account, setAccount] = useState<SupabaseAccount | null>(null);
   const [distributionChannels, setDistributionChannels] = useState<any[]>([]);
   const [distributionTime, setDistributionTime] = useState<{ averageHours: number; trend: string } | null>(null);
+  const [serpData, setSerpData] = useState<{
+    northAmerica: { position: number; trend: string } | null;
+    europe: { position: number; trend: string } | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -74,8 +78,8 @@ const AccountDetails = () => {
         
         setAccount(accountData);
         
-        // Load publications for this account (last 30 days)
-        const { data: publicationsData, error: publicationsError } = await databaseService.getPublicationsLast30Days(id);
+        // Load tracked publications for this account (last 30 days)
+        const { data: publicationsData, error: publicationsError } = await databaseService.getTrackedPublicationsLast30Days(id);
         
         if (publicationsError) {
           console.error('Error loading publications:', publicationsError);
@@ -107,6 +111,16 @@ const AccountDetails = () => {
           // Don't set error here, just log it
         } else {
           setDistributionTime({ averageHours, trend });
+        }
+
+        // Load SERP data for this account
+        const { northAmerica, europe, error: serpError } = await databaseService.getSerpData(id);
+        
+        if (serpError) {
+          console.error('Error loading SERP data:', serpError);
+          // Don't set error here, just log it
+        } else {
+          setSerpData({ northAmerica, europe });
         }
       } catch (err) {
         console.error('Error loading account data:', err);
@@ -141,10 +155,34 @@ const AccountDetails = () => {
       value: distributionTime ? `${distributionTime.averageHours} hrs` : 'N/A',
       trend: distributionTime?.trend || 'No data available'
     },
-      serpPosition: {
-        value: 'Coming Soon', // This would need to be calculated from publications
-        positions: 'Coming Soon'
-      }
+      serpPosition: (() => {
+        // Always show the card, but with different content based on data availability
+        if (serpData?.northAmerica || serpData?.europe) {
+          const regions = [];
+          if (serpData.northAmerica) regions.push('North America');
+          if (serpData.europe) regions.push('Europe');
+          
+          // Get the best position (lowest number) or average if both exist
+          let position: string;
+          if (serpData.northAmerica && serpData.europe) {
+            const avgPosition = Math.round((serpData.northAmerica.position + serpData.europe.position) / 2);
+            position = `#${avgPosition}`;
+          } else {
+            const pos = serpData.northAmerica?.position || serpData.europe?.position;
+            position = pos ? `#${pos}` : 'N/A';
+          }
+          
+          return {
+            value: position,
+            positions: regions.join(', ')
+          };
+        } else {
+          return {
+            value: '-',
+            positions: 'No data available'
+          };
+        }
+      })()
     },
     aiSummary: {
       internal: account.ai_performance_summary || `### Key Performance Insights

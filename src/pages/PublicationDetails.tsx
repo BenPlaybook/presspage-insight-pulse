@@ -10,43 +10,20 @@ import { SerpResultsTable } from '@/components/publications/SerpResultsTable';
 import { SocialCoverageTable } from '@/components/publications/SocialCoverageTable';
 import { PublicationMetrics } from '@/components/publications/PublicationMetrics';
 import { ArticleInformation } from '@/components/publications/ArticleInformation';
+import { RelatedPublications } from '@/components/publications/RelatedPublications';
 import { Publication } from '@/types/publications';
 import { databaseService } from '@/services/databaseService';
 import { publicationAdapter } from '@/services/publicationAdapter';
 import { Account as SupabaseAccount } from '@/types/database';
 import { supabase } from '@/lib/supabase';
-
-// Helper function to generate appropriate titles for social media posts
-const generatePublicationTitle = (publication: Publication): string => {
-  const detectedDate = new Date(publication.detectedDate);
-  const formattedDate = detectedDate.toLocaleDateString('en-GB'); // DD/MM/YYYY format
-  
-  // Check if it's a social media post based on source or content
-  const isSocialMedia = publication.source?.includes('linkedin.com') || 
-                       publication.source?.includes('twitter.com') ||
-                       publication.source?.includes('x.com') ||
-                       publication.title?.toLowerCase().includes('linkedin') ||
-                       publication.title?.toLowerCase().includes('twitter');
-  
-  if (isSocialMedia) {
-    if (publication.source?.includes('linkedin.com')) {
-      return `LinkedIn Post ${formattedDate}`;
-    } else if (publication.source?.includes('twitter.com') || publication.source?.includes('x.com')) {
-      return `Twitter Post ${formattedDate}`;
-    } else {
-      return `Social Media Post ${formattedDate}`;
-    }
-  }
-  
-  // For regular articles, use the original title
-  return publication.title;
-};
+import { generatePublicationTitle } from '@/utils/publicationUtils';
 
 const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const [publication, setPublication] = useState<Publication | null>(null);
   const [account, setAccount] = useState<SupabaseAccount | null>(null);
+  const [relatedPublications, setRelatedPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -91,6 +68,18 @@ const PublicationDetails = () => {
           console.log('ai_performance_summary:', accountData.ai_performance_summary);
           console.log('customer_ai_summary:', accountData.customer_ai_summary);
           setAccount(accountData);
+        }
+
+        // Load related publications
+        const { data: relatedData, error: relatedError } = await databaseService.getRelatedPublications(publicationId);
+        
+        if (relatedError) {
+          console.error('Error loading related publications:', relatedError);
+          // Don't set error here, just log it
+        } else {
+          // Convert related publications to frontend format
+          const convertedRelatedPublications = publicationAdapter.fromSupabaseArray(relatedData || []);
+          setRelatedPublications(convertedRelatedPublications);
         }
       } catch (err) {
         console.error('Error loading publication data:', err);
@@ -156,16 +145,24 @@ const PublicationDetails = () => {
                 <span className="text-sm text-gray-500">Tracking Period: {publication.trackingPeriod.start} - {publication.trackingPeriod.end}</span>
               </div>
             </div>
-            {publication.source && (
-              <a 
-                href={publication.source} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="bg-presspage-teal hover:bg-presspage-teal/90 text-white px-4 py-2 rounded-md font-medium transition-colors"
+            <div className="flex gap-2">
+              {publication.source && (
+                <a 
+                  href={publication.source} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-presspage-teal hover:bg-presspage-teal/90 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                >
+                  Go to Article
+                </a>
+              )}
+              <Link 
+                to={`/account/${id}`} 
+                className="bg-[#122F4A] hover:bg-opacity-90 text-white px-4 py-2 rounded-md font-medium transition-colors"
               >
-                Go to Article
-              </a>
-            )}
+                Back to Account
+              </Link>
+            </div>
           </div>
         </div>
         
@@ -319,13 +316,12 @@ const PublicationDetails = () => {
           </div>
         )}
         
+        {/* Related Publications Section */}
         <div className="mt-8">
-          <Link 
-            to={`/account/${id}`} 
-            className="bg-[#122F4A] hover:bg-opacity-90 text-white py-3 px-4 rounded-md font-medium transition-colors block text-center"
-          >
-            Back to Account
-          </Link>
+          <RelatedPublications 
+            publications={relatedPublications} 
+            accountId={id || ''} 
+          />
         </div>
       </main>
     </div>

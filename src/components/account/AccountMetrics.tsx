@@ -160,7 +160,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
                 title="Search Engine Position"
                 value={metrics.serpPosition.value}
                 subtext={metrics.serpPosition.positions}
-                valueClassName="text-presspage-teal"
+                valueClassName={metrics.serpPosition.value === '-' ? 'text-gray-400' : 'text-presspage-teal'}
                 icon={<Search className="w-5 h-5" />}
                 className="h-full"
               />

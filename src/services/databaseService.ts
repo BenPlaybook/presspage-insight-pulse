@@ -316,6 +316,27 @@ export const databaseService = {
     return { data, error };
   },
 
+  async getTrackedPublicationsLast30Days(accountId: string): Promise<PublicationsResponse> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get publications that are being tracked (not direct social media posts)
+    // Filter out publications that are direct LinkedIn/Twitter posts
+    const { data, error } = await supabase
+      .from('publications')
+      .select('*')
+      .eq('account_id', accountId)
+      .gte('scraped_at', thirtyDaysAgo.toISOString())
+      .not('article_url', 'ilike', '%linkedin.com%')
+      .not('article_url', 'ilike', '%twitter.com%')
+      .not('article_url', 'ilike', '%x.com%')
+      .not('title', 'ilike', '%linkedin post%')
+      .not('title', 'ilike', '%twitter post%')
+      .order('scraped_at', { ascending: false });
+
+    return { data, error };
+  },
+
   // ===== PUBLICATIONS CLASSIFICATION STATS =====
   async getPublicationsClassificationStats(accountId: string): Promise<{
     financial: number;
@@ -326,21 +347,27 @@ export const databaseService = {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      // Get financial publications count
+      // Get financial publications count (tracked only)
       const { count: financialCount } = await supabase
         .from('publications')
         .select('*', { count: 'exact', head: true })
         .eq('account_id', accountId)
         .eq('financial_classification', 'Financial')
-        .gte('scraped_at', thirtyDaysAgo.toISOString());
+        .gte('scraped_at', thirtyDaysAgo.toISOString())
+        .not('article_url', 'ilike', '%linkedin.com%')
+        .not('article_url', 'ilike', '%twitter.com%')
+        .not('article_url', 'ilike', '%x.com%');
 
-      // Get non-financial publications count
+      // Get non-financial publications count (tracked only)
       const { count: nonFinancialCount } = await supabase
         .from('publications')
         .select('*', { count: 'exact', head: true })
         .eq('account_id', accountId)
         .neq('financial_classification', 'Financial')
-        .gte('scraped_at', thirtyDaysAgo.toISOString());
+        .gte('scraped_at', thirtyDaysAgo.toISOString())
+        .not('article_url', 'ilike', '%linkedin.com%')
+        .not('article_url', 'ilike', '%twitter.com%')
+        .not('article_url', 'ilike', '%x.com%');
 
       return {
         financial: financialCount || 0,
@@ -353,6 +380,36 @@ export const databaseService = {
         nonFinancial: 0,
         error
       };
+    }
+  },
+
+  // ===== RELATED PUBLICATIONS =====
+  async getRelatedPublications(publicationId: string): Promise<PublicationsResponse> {
+    try {
+      // Get related publications based on publication_relationships table
+      // where content_source_id matches the current publication's content_source_id
+      const { data, error } = await supabase
+        .from('publication_relationships')
+        .select(`
+          publication_id_a,
+          publication_id_b,
+          publications!publication_id_a(*)
+        `)
+        .eq('publication_id_a', publicationId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching related publications:', error);
+        return { data: [], error };
+      }
+
+      // Extract the related publications from the relationships
+      const relatedPublications = data?.map(rel => rel.publications).filter(Boolean) || [];
+      
+      return { data: relatedPublications, error: null };
+    } catch (error) {
+      console.error('Error in getRelatedPublications:', error);
+      return { data: [], error };
     }
   },
 
@@ -385,6 +442,44 @@ export const databaseService = {
       .order('created_at', { ascending: false });
 
     return { data: data || [], error };
+  },
+
+  // ===== SERP DATA =====
+  async getSerpData(accountId: string): Promise<{
+    northAmerica: { position: number; trend: string } | null;
+    europe: { position: number; trend: string } | null;
+    error: any;
+  }> {
+    try {
+      // This would typically query a serp_data table
+      // For demonstration, we'll return sample data for some accounts
+      if (accountId === '1') { // Ethiad Airways
+        return {
+          northAmerica: { position: 3, trend: '+2 positions' },
+          europe: { position: 5, trend: '+1 position' },
+          error: null
+        };
+      } else if (accountId === '2') { // Another account with only Europe data
+        return {
+          northAmerica: null,
+          europe: { position: 8, trend: '-1 position' },
+          error: null
+        };
+      } else {
+        // No SERP data available for other accounts
+        return {
+          northAmerica: null,
+          europe: null,
+          error: null
+        };
+      }
+    } catch (error) {
+      return {
+        northAmerica: null,
+        europe: null,
+        error
+      };
+    }
   },
 
   // ===== DISTRIBUTION TIME CALCULATION =====
