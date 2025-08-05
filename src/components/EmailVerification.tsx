@@ -44,7 +44,10 @@ const EmailVerification = () => {
       <header className="bg-presspage-blue text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl font-bold">Content Analyzer</h1>
+            <h1 className="text-xl font-bold">
+              Content Analyzer
+              <span className="text-xs bg-presspage-teal text-white px-2 py-0.5 rounded ml-2 font-medium">Beta</span>
+            </h1>
             <span className="text-xs text-gray-300">by Presspage</span>
           </div>
         </div>

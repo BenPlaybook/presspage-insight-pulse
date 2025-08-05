@@ -81,6 +81,7 @@ const Login = () => {
           <div className="flex items-center space-x-2">
             <h1 className="text-xl font-bold">
               <Link to="/">Content Analyzer</Link>
+              <span className="text-xs bg-presspage-teal text-white px-2 py-0.5 rounded ml-2 font-medium">Beta</span>
             </h1>
             <span className="text-xs text-gray-300">by Presspage</span>
           </div>

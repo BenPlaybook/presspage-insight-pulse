@@ -17,6 +17,7 @@ export const Header = ({ variant = 'default', title }: HeaderProps) => {
       <div className="flex items-center space-x-2">
         <h1 className="text-xl font-bold">
           <Link to="/">Content Analyzer</Link>
+          <span className="text-xs bg-presspage-teal text-white px-2 py-0.5 rounded ml-2 font-medium">Beta</span>
           {variant === 'account' && (
             <span className="text-presspage-teal font-normal text-sm ml-2">
               {title}

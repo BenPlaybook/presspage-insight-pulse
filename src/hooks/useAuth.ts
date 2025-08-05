@@ -6,6 +6,30 @@ export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userProfile, setUserProfile] = useState<{ full_access: boolean } | null>(null)
+
+  // Función para obtener el perfil del usuario
+  const getUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('full_access')
+        .eq('id', userId)
+        .single()
+      
+      if (error) {
+        console.error('Error getting user profile:', error)
+        // Si no existe el usuario en la tabla, crear un perfil por defecto
+        return { full_access: false }
+      }
+      
+      return data || { full_access: false }
+    } catch (error) {
+      console.error('Error getting user profile:', error)
+      // En caso de error, retornar perfil por defecto
+      return { full_access: false }
+    }
+  }
 
   useEffect(() => {
     // Obtener sesión inicial
@@ -14,9 +38,20 @@ export const useAuth = () => {
         const { data: { session } } = await supabase.auth.getSession()
         setSession(session)
         setUser(session?.user ?? null)
+        
+        // Establecer loading como false inmediatamente después de obtener la sesión
+        setLoading(false)
+        
+        // Obtener perfil del usuario si existe (en background)
+        if (session?.user?.id) {
+          getUserProfile(session.user.id).then(profile => {
+            setUserProfile(profile)
+          }).catch(() => {
+            setUserProfile({ full_access: false })
+          })
+        }
       } catch (error) {
         console.error('Error getting session:', error)
-      } finally {
         setLoading(false)
       }
     }
@@ -29,7 +64,20 @@ export const useAuth = () => {
         console.log('Auth state changed:', event, session?.user?.email)
         setSession(session)
         setUser(session?.user ?? null)
+        
+        // Establecer loading como false inmediatamente
         setLoading(false)
+        
+        // Obtener perfil del usuario si existe (en background)
+        if (session?.user?.id) {
+          getUserProfile(session.user.id).then(profile => {
+            setUserProfile(profile)
+          }).catch(() => {
+            setUserProfile({ full_access: false })
+          })
+        } else {
+          setUserProfile(null)
+        }
       }
     )
 
@@ -98,6 +146,7 @@ export const useAuth = () => {
     user,
     session,
     loading,
+    userProfile,
     signUp,
     signIn,
     signOut,
