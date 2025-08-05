@@ -3,7 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown, Minus, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, TrendingUp, TrendingDown, Activity, Download } from 'lucide-react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PDFComparisonDocument } from './PDFComparisonDocument';
 
 interface CompetitorComparisonModalProps {
   isOpen: boolean;
@@ -263,7 +265,28 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end gap-3 pt-4">
+            <PDFDownloadLink
+              document={
+                <PDFComparisonDocument
+                  champion={champion}
+                  competitor={competitor}
+                  generatedDate={new Date().toLocaleDateString()}
+                />
+              }
+              fileName={`benchmark-comparison-${champion.name}-vs-${competitor.name}.pdf`}
+            >
+              {({ blob, url, loading, error }) => (
+                <Button
+                  variant="outline"
+                  disabled={loading}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  {loading ? 'Generating PDF...' : 'Export PDF'}
+                </Button>
+              )}
+            </PDFDownloadLink>
             <Button onClick={onClose} variant="outline">
               Close
             </Button>
