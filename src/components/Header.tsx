@@ -2,6 +2,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { AddAccountModal } from '@/components/accounts/AddAccountModal';
 
 type HeaderProps = {
   variant?: 'default' | 'dashboard' | 'account' | 'benchmark';
@@ -11,6 +13,7 @@ type HeaderProps = {
 export const Header = ({ variant = 'default', title }: HeaderProps) => {
   const location = useLocation();
   const { user, signOut } = useAuthContext();
+  const [addAccountModalOpen, setAddAccountModalOpen] = useState(false);
   
   return (
     <header className="bg-presspage-blue text-white p-4 flex justify-between items-center">
@@ -51,9 +54,12 @@ export const Header = ({ variant = 'default', title }: HeaderProps) => {
         )}
         {location.pathname === '/' && (
           <>
-            <Link to="/account/new" className="bg-presspage-teal text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center gap-1">
+            <button
+              onClick={() => setAddAccountModalOpen(true)}
+              className="bg-presspage-teal text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center gap-1"
+            >
               + Add Account
-            </Link>
+            </button>
             <Link to="/benchmark" className="bg-transparent border border-white text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-10 transition-colors">
               Benchmark
             </Link>
@@ -82,6 +88,16 @@ export const Header = ({ variant = 'default', title }: HeaderProps) => {
           </button>
         )}
       </div>
+      
+      {/* Add Account Modal */}
+      <AddAccountModal
+        isOpen={addAccountModalOpen}
+        onClose={() => setAddAccountModalOpen(false)}
+        onSuccess={() => {
+          // Refresh the page or trigger a data reload
+          window.location.reload();
+        }}
+      />
     </header>
   );
 };
