@@ -54,7 +54,7 @@ export const Header = ({ variant = 'default', title }: HeaderProps) => {
             <Link to="/account/new" className="bg-presspage-teal text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-opacity-90 transition-colors flex items-center gap-1">
               + Add Account
             </Link>
-            <Link to="/benchmark" className="bg-transparent border border-white text-white px-3 py-1.1 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-10 transition-colors">
+            <Link to="/benchmark" className="bg-transparent border border-white text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-white hover:bg-opacity-10 transition-colors">
               Benchmark
             </Link>
           </>
