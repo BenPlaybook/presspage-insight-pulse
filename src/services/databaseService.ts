@@ -549,5 +549,183 @@ export const databaseService = {
     }
   },
 
+  // Get complete account data for benchmark analysis
+  async getAccountsForBenchmark(accountIds: string[]): Promise<{
+    data: Array<{
+      id: string;
+      name: string;
+      main_website_url: string;
+      industry: string;
+      ai_performance_summary: string | null;
+      customer_ai_summary: string | null;
+    }>;
+    error: any;
+  }> {
+    try {
+      // Validate input
+      if (!accountIds || accountIds.length === 0) {
+        console.warn('getAccountsForBenchmark: No account IDs provided');
+        return {
+          data: [],
+          error: 'No account IDs provided'
+        };
+      }
+
+      // Filter out any null/undefined IDs
+      const validIds = accountIds.filter(id => id && id.trim() !== '');
+      
+      if (validIds.length === 0) {
+        console.warn('getAccountsForBenchmark: No valid account IDs found');
+        return {
+          data: [],
+          error: 'No valid account IDs found'
+        };
+      }
+
+      console.log('getAccountsForBenchmark: Querying for IDs:', validIds);
+
+      const { data, error } = await supabase
+        .from('accounts')
+        .select(`
+          id,
+          name,
+          main_website_url,
+          industry,
+          ai_performance_summary,
+          customer_ai_summary
+        `)
+        .in('id', validIds);
+
+      if (error) {
+        console.error('getAccountsForBenchmark: Supabase error:', error);
+      } else {
+        console.log('getAccountsForBenchmark: Successfully retrieved', data?.length || 0, 'accounts');
+      }
+
+      return {
+        data: data || [],
+        error
+      };
+    } catch (error) {
+      console.error('Error getting accounts for benchmark:', error);
+      return {
+        data: [],
+        error
+      };
+    }
+  },
+
+  // Get benchmark metrics for an account
+  async getBenchmarkMetrics(accountId: string): Promise<{
+    data: {
+      total_publications_30d: number;
+      average_speed: number;
+      serp_position: number;
+      social_coverage: string;
+      efficiency_score: number;
+    } | null;
+    error: any;
+  }> {
+    try {
+      console.log('getBenchmarkMetrics: Getting metrics for account:', accountId);
+
+      // 1. Get publications from last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data: publications, error: publicationsError } = await supabase
+        .from('publications')
+        .select('id, publication_date, content_source_id')
+        .eq('account_id', accountId)
+        .gte('publication_date', thirtyDaysAgo.toISOString())
+        .not('publication_date', 'is', null);
+
+      if (publicationsError) {
+        console.error('getBenchmarkMetrics: Error getting publications:', publicationsError);
+        return { data: null, error: publicationsError };
+      }
+
+      const total_publications_30d = publications?.length || 0;
+
+      // 2. Calculate Average Speed
+      let average_speed = 0;
+      if (publications && publications.length > 1) {
+        // Sort publications by date
+        const sortedPublications = publications
+          .filter(pub => pub.publication_date)
+          .sort((a, b) => new Date(a.publication_date).getTime() - new Date(b.publication_date).getTime());
+
+        // Calculate average days between publications
+        let totalDays = 0;
+        let count = 0;
+
+        for (let i = 1; i < sortedPublications.length; i++) {
+          const prevDate = new Date(sortedPublications[i - 1].publication_date);
+          const currDate = new Date(sortedPublications[i].publication_date);
+          const daysDiff = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+          totalDays += daysDiff;
+          count++;
+        }
+
+        average_speed = count > 0 ? totalDays / count : 0;
+      }
+
+      // 3. Calculate SERP Position
+      let serp_position = 0;
+      if (publications && publications.length > 0) {
+        const publicationIds = publications.map(pub => pub.id);
+
+        const { data: relationships, error: relationshipsError } = await supabase
+          .from('publication_relationships')
+          .select('serp_index_position')
+          .in('publication_id', publicationIds)
+          .not('serp_index_position', 'is', null);
+
+        if (!relationshipsError && relationships && relationships.length > 0) {
+          const validPositions = relationships
+            .map(rel => rel.serp_index_position)
+            .filter(pos => pos !== null && pos > 0);
+
+          if (validPositions.length > 0) {
+            serp_position = validPositions.reduce((sum, pos) => sum + pos, 0) / validPositions.length;
+          }
+        }
+      }
+
+      // 4. Social Coverage (currently not available)
+      const social_coverage = "-";
+
+      // 5. Calculate Efficiency Score
+      // Formula: (1 / average_speed) * (1 / serp_position) * total_publications_30d * 100
+      let efficiency_score = 0;
+      if (average_speed > 0 && serp_position > 0) {
+        efficiency_score = (1 / average_speed) * (1 / serp_position) * total_publications_30d * 100;
+      } else if (total_publications_30d > 0) {
+        // Fallback calculation if some metrics are missing
+        efficiency_score = total_publications_30d * 10;
+      }
+
+      const metrics = {
+        total_publications_30d,
+        average_speed: Math.round(average_speed * 100) / 100, // Round to 2 decimals
+        serp_position: Math.round(serp_position * 100) / 100, // Round to 2 decimals
+        social_coverage,
+        efficiency_score: Math.round(efficiency_score * 100) / 100 // Round to 2 decimals
+      };
+
+      console.log('getBenchmarkMetrics: Calculated metrics:', metrics);
+
+      return {
+        data: metrics,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error getting benchmark metrics:', error);
+      return {
+        data: null,
+        error
+      };
+    }
+  }
 
 }; 

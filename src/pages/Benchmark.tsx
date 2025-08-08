@@ -81,14 +81,48 @@ const Benchmark = () => {
 
   // Load account metrics
   const loadAccountMetrics = async (accountId: string) => {
-    // This would load real metrics from the database
-    // For now, we'll generate mock data
-    const account = await databaseService.getAccountById(accountId);
-    return {
-      id: accountId,
-      name: account.data?.name || 'Unknown',
-      metrics: generateMockMetrics(account.data?.name || 'Unknown')
-    };
+    try {
+      // Get account details
+      const account = await databaseService.getAccountById(accountId);
+      
+      // Get real metrics from Supabase
+      const { data: metrics, error } = await databaseService.getBenchmarkMetrics(accountId);
+      
+      if (error) {
+        console.error('Error loading metrics for account:', accountId, error);
+        // Fallback to mock data if real metrics fail
+        return {
+          id: accountId,
+          name: account.data?.name || 'Unknown',
+          metrics: generateMockMetrics(account.data?.name || 'Unknown')
+        };
+      }
+
+      // Transform Supabase metrics to match our UI structure
+      const transformedMetrics = {
+        publications: metrics?.total_publications_30d || 0,
+        distributionTime: metrics?.average_speed || 0,
+        serpPosition: metrics?.serp_position || 0,
+        socialReach: metrics?.social_coverage === "-" ? 0 : parseFloat(metrics?.social_coverage || "0"),
+        engagementRate: metrics?.efficiency_score || 0,
+        financialPublications: Math.floor((metrics?.total_publications_30d || 0) * 0.4), // Estimate
+        nonFinancialPublications: Math.floor((metrics?.total_publications_30d || 0) * 0.6) // Estimate
+      };
+
+      return {
+        id: accountId,
+        name: account.data?.name || 'Unknown',
+        metrics: transformedMetrics
+      };
+    } catch (error) {
+      console.error('Error loading account metrics:', error);
+      // Fallback to mock data
+      return {
+        id: accountId,
+        name: 'Unknown',
+        metrics: generateMockMetrics('Unknown')
+      };
+    }
   };
 
   // Generate mock metrics for demonstration
@@ -180,11 +214,11 @@ const Benchmark = () => {
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-3 px-4 font-medium">Company</th>
-                        <th className="text-center py-3 px-4 font-medium">Publications</th>
-                        <th className="text-center py-3 px-4 font-medium">Distribution Time</th>
+                        <th className="text-center py-3 px-4 font-medium">Publications (30d)</th>
+                        <th className="text-center py-3 px-4 font-medium">Avg Speed (days)</th>
                         <th className="text-center py-3 px-4 font-medium">SERP Position</th>
-                        <th className="text-center py-3 px-4 font-medium">Social Reach</th>
-                        <th className="text-center py-3 px-4 font-medium">Engagement Rate</th>
+                        <th className="text-center py-3 px-4 font-medium">Social Coverage</th>
+                        <th className="text-center py-3 px-4 font-medium">Efficiency Score</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -203,16 +237,16 @@ const Benchmark = () => {
                           {benchmarkData.champion.metrics.publications}
                         </td>
                         <td className="text-center py-3 px-4 font-semibold">
-                          {benchmarkData.champion.metrics.distributionTime.toFixed(1)}h
+                          {benchmarkData.champion.metrics.distributionTime.toFixed(1)}d
                         </td>
                         <td className="text-center py-3 px-4 font-semibold">
-                          #{benchmarkData.champion.metrics.serpPosition}
+                          #{benchmarkData.champion.metrics.serpPosition.toFixed(1)}
                         </td>
                         <td className="text-center py-3 px-4 font-semibold">
-                          {benchmarkData.champion.metrics.socialReach.toLocaleString()}
+                          {benchmarkData.champion.metrics.socialReach === 0 ? "-" : benchmarkData.champion.metrics.socialReach.toLocaleString()}
                         </td>
                         <td className="text-center py-3 px-4 font-semibold">
-                          {benchmarkData.champion.metrics.engagementRate.toFixed(2)}%
+                          {benchmarkData.champion.metrics.engagementRate.toFixed(1)}
                         </td>
                       </tr>
                       
@@ -230,16 +264,16 @@ const Benchmark = () => {
                             {competitor.metrics.publications}
                           </td>
                           <td className="text-center py-3 px-4">
-                            {competitor.metrics.distributionTime.toFixed(1)}h
+                            {competitor.metrics.distributionTime.toFixed(1)}d
                           </td>
                           <td className="text-center py-3 px-4">
-                            #{competitor.metrics.serpPosition}
+                            #{competitor.metrics.serpPosition.toFixed(1)}
                           </td>
                           <td className="text-center py-3 px-4">
-                            {competitor.metrics.socialReach.toLocaleString()}
+                            {competitor.metrics.socialReach === 0 ? "-" : competitor.metrics.socialReach.toLocaleString()}
                           </td>
                           <td className="text-center py-3 px-4">
-                            {competitor.metrics.engagementRate.toFixed(2)}%
+                            {competitor.metrics.engagementRate.toFixed(1)}
                           </td>
                         </tr>
                       ))}

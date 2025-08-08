@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown, Minus, TrendingUp, TrendingDown, Activity, Download } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ArrowUp, ArrowDown, Minus, TrendingUp, TrendingDown, Activity, Download, ChevronDown, ChevronRight, Brain } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { PDFComparisonDocument } from './PDFComparisonDocument';
 
@@ -38,6 +39,7 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
   champion,
   competitor
 }) => {
+  const [aiInsightsOpen, setAiInsightsOpen] = useState(false);
   // Calculate comparison metrics
   const calculateComparison = (championValue: number, competitorValue: number) => {
     const difference = competitorValue - championValue;
@@ -133,36 +135,100 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
             </div>
           </div>
 
+          {/* AI Insights */}
+          <Collapsible open={aiInsightsOpen} onOpenChange={setAiInsightsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg hover:bg-gradient-to-r hover:from-purple-100 hover:to-blue-100">
+                <div className="flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                  <span className="font-semibold text-purple-900">AI Insights</span>
+                </div>
+                {aiInsightsOpen ? (
+                  <ChevronDown className="w-4 h-4 text-purple-600" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-purple-600" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Champion AI Summary Card */}
+                <Card className="border-l-4 border-l-presspage-teal">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-presspage-teal">
+                      {champion.name} - AI Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 text-sm">
+                      <p className="text-gray-700">
+                        <strong>Performance Summary:</strong> {champion.name} demonstrates strong content distribution efficiency with {champion.metrics.publications} publications in the last 30 days.
+                      </p>
+                      <p className="text-gray-700">
+                        <strong>Speed Analysis:</strong> Average distribution time of {champion.metrics.distributionTime.toFixed(1)} days shows {champion.metrics.distributionTime < 5 ? 'excellent' : 'good'} content velocity.
+                      </p>
+                      <p className="text-gray-700">
+                        <strong>SERP Performance:</strong> Ranking at position #{champion.metrics.serpPosition.toFixed(1)} indicates {champion.metrics.serpPosition < 5 ? 'strong' : 'moderate'} search visibility.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Competitor AI Summary Card */}
+                <Card className="border-l-4 border-l-gray-400">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-700">
+                      {competitor.name} - AI Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-2 text-sm">
+                      <p className="text-gray-700">
+                        <strong>Performance Summary:</strong> {competitor.name} shows {competitor.metrics.publications > champion.metrics.publications ? 'higher' : 'lower'} publication volume with {competitor.metrics.publications} articles.
+                      </p>
+                      <p className="text-gray-700">
+                        <strong>Speed Analysis:</strong> {competitor.metrics.distributionTime.toFixed(1)} days average distribution time, {competitor.metrics.distributionTime < champion.metrics.distributionTime ? 'faster' : 'slower'} than {champion.name}.
+                      </p>
+                      <p className="text-gray-700">
+                        <strong>SERP Performance:</strong> Position #{competitor.metrics.serpPosition.toFixed(1)} suggests {competitor.metrics.serpPosition < champion.metrics.serpPosition ? 'better' : 'worse'} search ranking than {champion.name}.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
           {/* Key Metrics */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Key Performance Metrics</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {renderMetricCard(
-                "Total Publications",
+                "Publications (30d)",
                 champion.metrics.publications,
                 competitor.metrics.publications,
                 (value) => value.toString(),
                 false
               )}
               {renderMetricCard(
-                "Distribution Time (hours)",
+                "Average Speed (days)",
                 champion.metrics.distributionTime,
                 competitor.metrics.distributionTime,
-                (value) => `${value.toFixed(1)}h`,
+                (value) => `${value.toFixed(1)}d`,
                 true
               )}
               {renderMetricCard(
                 "SERP Position",
                 champion.metrics.serpPosition,
                 competitor.metrics.serpPosition,
-                (value) => `#${value}`,
+                (value) => `#${value.toFixed(1)}`,
                 true
               )}
               {renderMetricCard(
-                "Social Reach",
+                "Social Coverage",
                 champion.metrics.socialReach,
                 competitor.metrics.socialReach,
-                (value) => value.toLocaleString(),
+                (value) => value === 0 ? "-" : value.toLocaleString(),
                 false
               )}
             </div>
@@ -189,15 +255,15 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
             </div>
           </div>
 
-          {/* Engagement */}
+          {/* Efficiency Score */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold">Engagement</h4>
+            <h4 className="text-lg font-semibold">Performance Score</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {renderMetricCard(
-                "Engagement Rate",
+                "Efficiency Score",
                 champion.metrics.engagementRate,
                 competitor.metrics.engagementRate,
-                (value) => `${value.toFixed(2)}%`,
+                (value) => value.toFixed(1),
                 false
               )}
             </div>
@@ -213,7 +279,7 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
                     <div className="flex items-center gap-2 text-green-600">
                       <TrendingUp className="w-4 h-4" />
                       <span className="text-sm">
-                        <strong>{competitor.name}</strong> has faster distribution time than {champion.name}
+                        <strong>{competitor.name}</strong> has faster average speed than {champion.name}
                       </span>
                     </div>
                   )}
@@ -237,7 +303,7 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
                     <div className="flex items-center gap-2 text-green-600">
                       <TrendingUp className="w-4 h-4" />
                       <span className="text-sm">
-                        <strong>{competitor.name}</strong> has higher engagement rate than {champion.name}
+                        <strong>{competitor.name}</strong> has higher efficiency score than {champion.name}
                       </span>
                     </div>
                   )}
@@ -247,7 +313,7 @@ export const CompetitorComparisonModal: React.FC<CompetitorComparisonModalProps>
                     <div className="flex items-center gap-2 text-blue-600">
                       <Activity className="w-4 h-4" />
                       <span className="text-sm">
-                        <strong>{champion.name}</strong> has faster distribution time
+                        <strong>{champion.name}</strong> has faster average speed
                       </span>
                     </div>
                   )}

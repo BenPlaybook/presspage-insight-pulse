@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { sendIntakeAccountData } from '@/services/webhookService';
 
 interface AddAccountModalProps {
   isOpen: boolean;
@@ -17,30 +18,28 @@ interface AddAccountModalProps {
 
 interface AccountFormData {
   name: string;
-  domain: string;
+  main_website_url: string;
   industry: string;
   description: string;
-  website: string;
   country: string;
-  company_size: string;
+  employee_count: number;
 }
 
 export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState<AccountFormData>({
     name: '',
-    domain: '',
+    main_website_url: '',
     industry: '',
     description: '',
-    website: '',
     country: '',
-    company_size: ''
+    employee_count: 0
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleInputChange = (field: keyof AccountFormData, value: string) => {
+  const handleInputChange = (field: keyof AccountFormData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -52,8 +51,8 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
       setError('Company name is required');
       return false;
     }
-    if (!formData.domain.trim()) {
-      setError('Domain is required');
+    if (!formData.main_website_url.trim()) {
+      setError('Website URL is required');
       return false;
     }
     return true;
@@ -70,17 +69,17 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
     setLoading(true);
 
     try {
+      // Create account in Supabase
       const { data, error } = await supabase
         .from('accounts')
         .insert([
           {
             name: formData.name.trim(),
-            domain: formData.domain.trim(),
+            main_website_url: formData.main_website_url.trim(),
             industry: formData.industry.trim() || null,
             description: formData.description.trim() || null,
-                         website: formData.website.trim() || null,
             country: formData.country.trim() || null,
-            company_size: formData.company_size.trim() || null,
+            employee_count: formData.employee_count || 0,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }
@@ -93,18 +92,34 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
         return;
       }
 
+      // Send data to intake webhook
+      const webhookData = {
+        domain: formData.main_website_url.trim(),
+        name: formData.name.trim(),
+        source: 'web_app',
+        endpoint: 'add_account',
+        status_group: 'INTAKE',
+        status_value: 'received_from_web_app'
+      };
+
+      const webhookResult = await sendIntakeAccountData(webhookData);
+      
+      if (!webhookResult.success) {
+        console.warn('Webhook failed but account was created:', webhookResult.error);
+        // Don't fail the entire operation if webhook fails
+      }
+
       setSuccess(true);
       setTimeout(() => {
         onSuccess();
         onClose();
         setFormData({
           name: '',
-          domain: '',
+          main_website_url: '',
           industry: '',
           description: '',
-          website: '',
           country: '',
-          company_size: ''
+          employee_count: 0
         });
         setSuccess(false);
       }, 1500);
@@ -121,12 +136,11 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
     if (!loading) {
       setFormData({
         name: '',
-        domain: '',
+        main_website_url: '',
         industry: '',
         description: '',
-        website: '',
         country: '',
-        company_size: ''
+        employee_count: 0
       });
       setError(null);
       setSuccess(false);
@@ -169,25 +183,15 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="domain">Domain *</Label>
+              <Label htmlFor="main_website_url">Website URL *</Label>
               <Input
-                id="domain"
-                value={formData.domain}
-                onChange={(e) => handleInputChange('domain', e.target.value)}
-                placeholder="company.com"
+                id="main_website_url"
+                value={formData.main_website_url}
+                onChange={(e) => handleInputChange('main_website_url', e.target.value)}
+                placeholder="https://company.com"
                 required
               />
             </div>
-
-                         <div className="space-y-2">
-               <Label htmlFor="website">Website</Label>
-               <Input
-                 id="website"
-                 value={formData.website}
-                 onChange={(e) => handleInputChange('website', e.target.value)}
-                 placeholder="https://company.com"
-               />
-             </div>
 
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
@@ -232,20 +236,15 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClos
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company_size">Company Size</Label>
-              <Select value={formData.company_size} onValueChange={(value) => handleInputChange('company_size', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1-10">1-10 employees</SelectItem>
-                  <SelectItem value="11-50">11-50 employees</SelectItem>
-                  <SelectItem value="51-200">51-200 employees</SelectItem>
-                  <SelectItem value="201-500">201-500 employees</SelectItem>
-                  <SelectItem value="501-1000">501-1000 employees</SelectItem>
-                  <SelectItem value="1000+">1000+ employees</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="employee_count">Employee Count</Label>
+              <Input
+                id="employee_count"
+                type="number"
+                value={formData.employee_count}
+                onChange={(e) => handleInputChange('employee_count', parseInt(e.target.value) || 0)}
+                placeholder="Enter number of employees"
+                min="0"
+              />
             </div>
           </div>
 
