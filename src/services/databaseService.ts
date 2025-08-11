@@ -386,27 +386,84 @@ export const databaseService = {
   // ===== RELATED PUBLICATIONS =====
   async getRelatedPublications(publicationId: string): Promise<PublicationsResponse> {
     try {
-      // Get related publications based on publication_relationships table
-      // where content_source_id matches the current publication's content_source_id
-      const { data, error } = await supabase
+      // Step 1: Get all relationships for the current publication with label
+      const { data: relationships, error: relationshipsError } = await supabase
         .from('publication_relationships')
-        .select(`
-          publication_id_a,
-          publication_id_b,
-          publications!publication_id_a(*)
-        `)
-        .eq('publication_id_a', publicationId)
+        .select('publication_id, label')
+        .eq('publication_id', publicationId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching related publications:', error);
-        return { data: [], error };
+      if (relationshipsError) {
+        console.error('Error fetching publication relationships:', relationshipsError);
+        return { data: [], error: relationshipsError };
       }
 
-      // Extract the related publications from the relationships
-      const relatedPublications = data?.map(rel => rel.publications).filter(Boolean) || [];
+      if (!relationships || relationships.length === 0) {
+        return { data: [], error: null };
+      }
+
+      // Step 2: Get the actual publication data for the related publication
+      // Since we're looking for related publications, we need to get the publication data
+      // for the current publication ID to understand the relationship
+      const { data: currentPublication, error: currentPubError } = await supabase
+        .from('publications')
+        .select('*')
+        .eq('id', publicationId)
+        .single();
+
+      if (currentPubError) {
+        console.error('Error fetching current publication:', currentPubError);
+        return { data: [], error: currentPubError };
+      }
+
+      // Step 3: Get related publications based on content_source_id
+      // This assumes that related publications share the same content_source_id
+      const { data: relatedPublications, error: publicationsError } = await supabase
+        .from('publications')
+        .select('*')
+        .eq('content_source_id', currentPublication.content_source_id)
+        .neq('id', publicationId) // Exclude the current publication
+        .order('publication_date', { ascending: false });
+
+      if (publicationsError) {
+        console.error('Error fetching related publications data:', publicationsError);
+        return { data: [], error: publicationsError };
+      }
+
+      // Step 4: Get labels for related publications from publication_relationships
+      const relatedPublicationIds = relatedPublications?.map(pub => pub.id) || [];
       
-      return { data: relatedPublications, error: null };
+      if (relatedPublicationIds.length > 0) {
+        const { data: relationshipLabels, error: labelsError } = await supabase
+          .from('publication_relationships')
+          .select('publication_id, label')
+          .in('publication_id', relatedPublicationIds);
+
+        if (labelsError) {
+          console.error('Error fetching relationship labels:', labelsError);
+        } else {
+          // Create a map of publication_id to label
+          const labelMap = new Map();
+          relationshipLabels?.forEach(rel => {
+            labelMap.set(rel.publication_id, rel.label);
+          });
+
+          // Add label to each publication
+          relatedPublications?.forEach(pub => {
+            pub.label = labelMap.get(pub.id) || null;
+          });
+        }
+      }
+
+      console.log('Related Publications:', {
+        publicationId,
+        contentSourceId: currentPublication.content_source_id,
+        relationshipsCount: relationships.length,
+        relatedPublicationsCount: relatedPublications?.length || 0,
+        labelsFound: relatedPublications?.map(pub => ({ id: pub.id, label: pub.label }))
+      });
+
+      return { data: relatedPublications || [], error: null };
     } catch (error) {
       console.error('Error in getRelatedPublications:', error);
       return { data: [], error };

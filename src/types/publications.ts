@@ -49,6 +49,7 @@ export type Publication = {
   source?: string;
   image?: string; // URL de la imagen del artículo
   aiSummary?: any; // JSONB field from Supabase
+  label?: string; // Field from Supabase to determine publication type
   trackingPeriod?: {
     start: string;
     end: string;

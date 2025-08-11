@@ -51,6 +51,7 @@ export const publicationAdapter = {
       source: supabasePublication.article_url || 'N/A',
       image: supabasePublication.image || null, // Solo incluir si existe
       aiSummary: supabasePublication.ai_summary || null,
+      label: supabasePublication.label || null,
       serpResults: [
                                                                        {
              region: 'NA',

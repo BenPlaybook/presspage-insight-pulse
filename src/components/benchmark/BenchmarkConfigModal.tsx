@@ -52,6 +52,8 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
   const [newName, setNewName] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [competitorSearchTerm, setCompetitorSearchTerm] = useState('');
 
   // Load existing accounts
   useEffect(() => {
@@ -297,6 +299,26 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
     }
   };
 
+  // Filter accounts based on search term
+  const filteredAccounts = accounts.filter(account => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      account.name.toLowerCase().includes(searchLower) ||
+      (account.main_website_url && account.main_website_url.toLowerCase().includes(searchLower))
+    );
+  });
+
+  // Filter accounts for competitors based on competitor search term
+  const filteredCompetitorAccounts = accounts.filter(account => {
+    if (!competitorSearchTerm) return true;
+    const searchLower = competitorSearchTerm.toLowerCase();
+    return (
+      account.name.toLowerCase().includes(searchLower) ||
+      (account.main_website_url && account.main_website_url.toLowerCase().includes(searchLower))
+    );
+  });
+
   const selectedChampion = accounts.find(acc => acc.id === championId);
 
   return (
@@ -325,14 +347,37 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
             <p className="text-sm text-gray-600">
               Choose the company you want to use as the baseline for comparison. This will be highlighted as the "champion" in the results.
             </p>
+            
+            {/* Search Input */}
+            <div className="space-y-2">
+              <Label htmlFor="search" className="text-sm font-medium">Search accounts</Label>
+              <Input
+                id="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by company name or website..."
+                className="w-full"
+              />
+              {searchTerm && (
+                <p className="text-xs text-gray-500">
+                  Found {filteredAccounts.length} account{filteredAccounts.length !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+            
             <Select value={championId} onValueChange={setChampionId}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose the company to benchmark against" />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map((account) => (
+                {filteredAccounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
-                    {account.name}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{account.name}</span>
+                      <span className="text-xs text-gray-500">
+                        {account.main_website_url || 'No website'}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -342,6 +387,11 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
                 <p className="text-sm text-blue-800">
                   <strong>Champion:</strong> {selectedChampion.name}
                 </p>
+                {selectedChampion.main_website_url && (
+                  <p className="text-sm text-blue-700">
+                    <strong>Website:</strong> {selectedChampion.main_website_url}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -364,17 +414,40 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
               <p className="text-xs text-gray-500">
                 Select from companies already in our database with historical data
               </p>
+              
+              {/* Competitor Search Input */}
+              <div className="space-y-2">
+                <Label htmlFor="competitorSearch" className="text-xs font-medium">Search competitors</Label>
+                <Input
+                  id="competitorSearch"
+                  value={competitorSearchTerm}
+                  onChange={(e) => setCompetitorSearchTerm(e.target.value)}
+                  placeholder="Search by company name or website..."
+                  className="w-full"
+                />
+                {competitorSearchTerm && (
+                  <p className="text-xs text-gray-500">
+                    Found {filteredCompetitorAccounts.filter(account => account.id !== championId && !competitors.some(comp => comp.id === account.id)).length} available account{filteredCompetitorAccounts.filter(account => account.id !== championId && !competitors.some(comp => comp.id === account.id)).length !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+              
               <Select onValueChange={addExistingCompetitor}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an existing account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts
+                  {filteredCompetitorAccounts
                     .filter(account => account.id !== championId)
                     .filter(account => !competitors.some(comp => comp.id === account.id))
                     .map((account) => (
                       <SelectItem key={account.id} value={account.id}>
-                        {account.name}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{account.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {account.main_website_url || 'No website'}
+                          </span>
+                        </div>
                       </SelectItem>
                     ))}
                 </SelectContent>
