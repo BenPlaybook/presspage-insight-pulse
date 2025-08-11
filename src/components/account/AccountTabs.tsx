@@ -68,7 +68,7 @@ export const AccountTabs: React.FC<AccountTabsProps> = ({
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Tracked Publications</h2>
-          <p className="text-sm text-gray-500">View and manage publications tracked from media room</p>
+          <p className="text-sm text-gray-500">View and manage publications tracked from Media Room</p>
         </div>
         
         <PublicationsFilters 

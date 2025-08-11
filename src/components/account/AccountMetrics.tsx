@@ -39,7 +39,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
               return { name: 'LinkedIn', icon: Linkedin };
             case 'Facebook':
               return { name: 'Facebook', icon: Facebook };
-            case 'media_room':
+            case 'Media Room':
               return { name: 'Media Room', icon: Newspaper };
             default:
               return { name: sourceType, icon: Globe };

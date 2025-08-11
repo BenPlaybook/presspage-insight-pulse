@@ -96,9 +96,33 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
       return;
     }
 
+    // Check if domain already exists in competitors (both new and existing)
+    const domainToAdd = newDomain.trim().toLowerCase();
+    const domainExists = competitors.some(comp => 
+      comp.domain.toLowerCase() === domainToAdd ||
+      (comp.domain && comp.domain.toLowerCase().includes(domainToAdd)) ||
+      (domainToAdd.includes(comp.domain.toLowerCase()))
+    );
+
+    if (domainExists) {
+      setErrors(['This domain is already added as a competitor']);
+      return;
+    }
+
+    // Check if domain already exists in accounts (to avoid creating duplicates)
+    const existingAccount = accounts.find(acc => 
+      acc.main_website_url && 
+      acc.main_website_url.toLowerCase().includes(domainToAdd)
+    );
+
+    if (existingAccount) {
+      setErrors([`This domain already exists in our database. Please select "${existingAccount.name}" from the existing accounts list.`]);
+      return;
+    }
+
     const newCompetitor = {
       name: newName.trim(),
-      domain: newDomain.trim().toLowerCase(),
+      domain: domainToAdd,
       isNew: true
     };
 
@@ -161,7 +185,24 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
 
       for (const newCompetitor of newCompetitors) {
         try {
-          // Create account in Supabase
+          // Check if account already exists before creating
+          const { data: existingAccount, error: checkError } = await supabase
+            .from('accounts')
+            .select('id, name, main_website_url')
+            .or(`main_website_url.eq.https://${newCompetitor.domain},main_website_url.eq.http://${newCompetitor.domain}`)
+            .single();
+
+          if (existingAccount) {
+            console.log(`Account already exists for domain ${newCompetitor.domain}:`, existingAccount);
+            createdAccounts.push({
+              id: existingAccount.id,
+              name: existingAccount.name,
+              domain: newCompetitor.domain
+            });
+            continue; // Skip creation, use existing account
+          }
+
+          // Create account in Supabase only if it doesn't exist
           const { data: accountData, error: createError } = await supabase
             .from('accounts')
             .insert([

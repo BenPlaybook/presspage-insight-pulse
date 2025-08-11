@@ -70,4 +70,11 @@ export type Publication = {
       timeDifference?: string;
     };
   };
+  relationship?: {
+    id: string;
+    publication_id: string;
+    label: string;
+    created_at: string;
+    [key: string]: any;
+  };
 };

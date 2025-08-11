@@ -50,28 +50,18 @@ export const RelatedPublicationDetailModal: React.FC<RelatedPublicationDetailMod
         <div className="space-y-6">
           {/* Header Information */}
           <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  {generatePublicationTitle(publication)}
-                </h2>
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge variant={status.variant}>{status.label}</Badge>
-                  {publication.sentiment && (
-                    <Badge variant="outline">
-                      {publication.sentiment}
-                    </Badge>
-                  )}
-                </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                {generatePublicationTitle(publication)}
+              </h2>
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant={status.variant}>{status.label}</Badge>
+                {publication.sentiment && (
+                  <Badge variant="outline">
+                    {publication.sentiment}
+                  </Badge>
+                )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                className="ml-4"
-              >
-                Close
-              </Button>
             </div>
 
             {/* Publication URL */}

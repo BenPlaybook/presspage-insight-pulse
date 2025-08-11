@@ -18,6 +18,16 @@ import { Account as SupabaseAccount } from '@/types/database';
 import { supabase } from '@/lib/supabase';
 import { generatePublicationTitle } from '@/utils/publicationUtils';
 
+// Función para obtener el favicon de un website (fallback)
+const getFaviconUrl = (websiteUrl: string): string => {
+  try {
+    const url = new URL(websiteUrl);
+    return `${url.protocol}//${url.hostname}/favicon.ico`;
+  } catch {
+    return '';
+  }
+};
+
 const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
   const [activeTab, setActiveTab] = useState('overview');
@@ -56,7 +66,7 @@ const PublicationDetails = () => {
         // Load account data with specific fields to debug
         const { data: accountData, error: accountError } = await supabase
           .from('accounts')
-          .select('id, name, ai_performance_summary, customer_ai_summary')
+          .select('id, name, main_website_url, logo_url, ai_performance_summary, customer_ai_summary')
           .eq('id', id)
           .single();
 
@@ -279,25 +289,141 @@ const PublicationDetails = () => {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-lg font-medium mb-4">Article Thumbnail</h3>
-                  {publication.image ? (
-                    <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
-                      <img 
-                        src={publication.image} 
-                        alt="Article thumbnail"
-                        className="w-full h-full object-cover rounded-lg"
-                        onError={(e) => {
-                          // Si la imagen falla, ocultar el contenedor
-                          e.currentTarget.parentElement!.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
-                      <div className="text-gray-400 text-sm text-center">
-                        <p>No image available</p>
+                  {(() => {
+                    // Primero intentar usar la imagen del artículo
+                    if (publication.image) {
+                      return (
+                        <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
+                          <img 
+                            src={publication.image} 
+                            alt="Article thumbnail"
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              // Si la imagen del artículo falla, intentar con el logo del account
+                              if (account?.logo_url) {
+                                e.currentTarget.src = account.logo_url;
+                                e.currentTarget.className = 'w-16 h-16 object-contain';
+                                e.currentTarget.alt = 'Account logo';
+                                e.currentTarget.onerror = () => {
+                                  // Si el logo también falla, intentar con el favicon
+                                  const faviconUrl = account?.main_website_url ? getFaviconUrl(account.main_website_url) : '';
+                                  if (faviconUrl) {
+                                    e.currentTarget.src = faviconUrl;
+                                    e.currentTarget.onerror = () => {
+                                      // Si el favicon también falla, mostrar "No image available"
+                                      e.currentTarget.parentElement!.innerHTML = `
+                                        <div class="text-gray-400 text-sm text-center">
+                                          <p>No image available</p>
+                                        </div>
+                                      `;
+                                    };
+                                  } else {
+                                    // Si no hay favicon, mostrar "No image available"
+                                    e.currentTarget.parentElement!.innerHTML = `
+                                      <div class="text-gray-400 text-sm text-center">
+                                        <p>No image available</p>
+                                      </div>
+                                    `;
+                                  }
+                                };
+                              } else {
+                                // Si no hay logo, intentar con el favicon
+                                const faviconUrl = account?.main_website_url ? getFaviconUrl(account.main_website_url) : '';
+                                if (faviconUrl) {
+                                  e.currentTarget.src = faviconUrl;
+                                  e.currentTarget.className = 'w-16 h-16 object-contain';
+                                  e.currentTarget.alt = 'Account logo';
+                                  e.currentTarget.onerror = () => {
+                                    // Si el favicon falla, mostrar "No image available"
+                                    e.currentTarget.parentElement!.innerHTML = `
+                                      <div class="text-gray-400 text-sm text-center">
+                                        <p>No image available</p>
+                                      </div>
+                                    `;
+                                  };
+                                } else {
+                                  // Si no hay favicon, mostrar "No image available"
+                                  e.currentTarget.parentElement!.innerHTML = `
+                                    <div class="text-gray-400 text-sm text-center">
+                                      <p>No image available</p>
+                                    </div>
+                                  `;
+                                }
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    
+                    // Si no hay imagen del artículo, intentar con el logo del account
+                    if (account?.logo_url) {
+                      return (
+                        <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
+                          <img 
+                            src={account.logo_url} 
+                            alt="Account logo"
+                            className="w-16 h-16 object-contain"
+                            onError={(e) => {
+                              // Si el logo falla, intentar con el favicon
+                              const faviconUrl = account?.main_website_url ? getFaviconUrl(account.main_website_url) : '';
+                              if (faviconUrl) {
+                                e.currentTarget.src = faviconUrl;
+                                e.currentTarget.onerror = () => {
+                                  // Si el favicon también falla, mostrar "No image available"
+                                  e.currentTarget.parentElement!.innerHTML = `
+                                    <div class="text-gray-400 text-sm text-center">
+                                      <p>No image available</p>
+                                    </div>
+                                  `;
+                                };
+                              } else {
+                                // Si no hay favicon, mostrar "No image available"
+                                e.currentTarget.parentElement!.innerHTML = `
+                                  <div class="text-gray-400 text-sm text-center">
+                                    <p>No image available</p>
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                    
+                    // Si no hay imagen del artículo ni logo del account, intentar con el favicon
+                    if (account?.main_website_url) {
+                      const faviconUrl = getFaviconUrl(account.main_website_url);
+                      if (faviconUrl) {
+                        return (
+                          <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
+                            <img 
+                              src={faviconUrl} 
+                              alt="Account logo"
+                              className="w-16 h-16 object-contain"
+                              onError={(e) => {
+                                // Si el favicon falla, mostrar "No image available"
+                                e.currentTarget.parentElement!.innerHTML = `
+                                  <div class="text-gray-400 text-sm text-center">
+                                    <p>No image available</p>
+                                  </div>
+                                `;
+                              }}
+                            />
+                          </div>
+                        );
+                      }
+                    }
+                    
+                    // Si no hay imagen del artículo, logo del account ni favicon, mostrar "No image available"
+                    return (
+                      <div className="bg-gray-100 rounded-lg aspect-video flex items-center justify-center mb-4">
+                        <div className="text-gray-400 text-sm text-center">
+                          <p>No image available</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   <div className="space-y-2">
                     <p className="text-sm font-medium">{generatePublicationTitle(publication)}</p>
                     <p className="text-xs text-gray-500 line-clamp-3">{publication.content || 'No content available'}</p>

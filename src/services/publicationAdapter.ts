@@ -93,7 +93,8 @@ export const publicationAdapter = {
           matched: false,
           timeDifference: 'Coming Soon'
         }
-      }
+      },
+      relationship: (supabasePublication as any).relationship || null
     };
   },
 
