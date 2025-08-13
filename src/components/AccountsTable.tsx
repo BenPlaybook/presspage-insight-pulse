@@ -7,8 +7,6 @@ import { AccountsTableHeader } from './accounts/AccountsTableHeader';
 
 interface AccountsTableProps {
   accounts?: Account[];
-  onSort?: () => void;
-  sortDirection?: 'asc' | 'desc';
 }
 
 // Datos de fallback si no se proporcionan accounts
@@ -115,25 +113,16 @@ const fallbackAccounts: Account[] = [
   }
 ];
 
-export const AccountsTable = ({ accounts = fallbackAccounts, onSort, sortDirection }: AccountsTableProps) => {
-  // Sort accounts by date added (most recent first), with optional name sorting
+export const AccountsTable = ({ accounts = fallbackAccounts }: AccountsTableProps) => {
+  // Always sort by dateAdded (most recent first)
   const sortedAccounts = [...accounts].sort((a, b) => {
-    // If explicit sort by name is requested, use that
-    if (sortDirection && onSort) {
-      if (sortDirection === 'desc') {
-        return b.name.localeCompare(a.name);
-      }
-      return a.name.localeCompare(b.name);
-    }
-    
-    // Default: sort by dateAdded (most recent first)
     return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
   });
   
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
       <table className="min-w-full divide-y divide-gray-200">
-        <AccountsTableHeader onSort={onSort} sortDirection={sortDirection} />
+        <AccountsTableHeader />
         <tbody className="bg-white divide-y divide-gray-200">
           {sortedAccounts.map((account) => (
             <tr key={account.id} className="hover:bg-gray-50">

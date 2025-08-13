@@ -403,10 +403,10 @@ export const databaseService = {
         return { data: [], error };
       }
 
-      // Extract the related publications from the relationships
+      // Extract the related publications from the relationships and flatten
       const relatedPublications = data?.map(rel => rel.publications).filter(Boolean) || [];
       
-      return { data: relatedPublications, error: null };
+      return { data: relatedPublications as unknown as Publication[], error: null };
     } catch (error) {
       console.error('Error in getRelatedPublications:', error);
       return { data: [], error };
