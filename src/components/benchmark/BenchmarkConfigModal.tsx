@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { databaseService } from '@/services/databaseService';
 import { sendIntakeAccountData, webhookService } from '@/services/webhookService';
 import { supabase } from '@/lib/supabase';
-import { Account } from '@/types/database';
+import { Account as DatabaseAccount } from '@/types/database';
 
 interface BenchmarkConfigModalProps {
   isOpen: boolean;

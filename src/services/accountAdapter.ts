@@ -12,6 +12,7 @@ export const accountAdapter = {
       dateAdded: supabaseAccount.created_at,
       industry: supabaseAccount.industry || 'N/A',
       headcount: supabaseAccount.pr_comms_headcount || 0,
+      domain: supabaseAccount.main_website_url || undefined,
       publications: {
         financial: {
           last30Days: Math.floor((supabaseAccount.search_period_publications || 0) * 0.3),
@@ -44,6 +45,7 @@ export const accountAdapter = {
       dateAdded: supabaseAccount.created_at,
       industry: supabaseAccount.industry || 'N/A',
       headcount: supabaseAccount.pr_comms_headcount || 0,
+      domain: supabaseAccount.main_website_url || undefined,
       publications: {
         financial: {
           last30Days: financial,

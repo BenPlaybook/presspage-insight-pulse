@@ -12,6 +12,7 @@ export type Account = {
   dateAdded: string;
   industry: string;
   headcount: number;
+  domain?: string;
   publications: {
     financial: Publication;
     nonFinancial: Publication;

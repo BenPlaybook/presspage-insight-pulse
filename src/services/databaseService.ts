@@ -28,7 +28,7 @@ export const databaseService = {
 
     // Apply search filter
     if (search) {
-      query = query.or(`name.ilike.%${search}%,industry.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,main_website_url.ilike.%${search}%`);
     }
 
     // Apply status filter

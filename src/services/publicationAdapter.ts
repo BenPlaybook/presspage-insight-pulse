@@ -7,9 +7,9 @@ export const publicationAdapter = {
     return {
       id: supabasePublication.id,
       title: supabasePublication.title,
-      status: supabasePublication.status || 'Completed',
+      status: (supabasePublication.status as any) || 'Completed',
       detectedDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
-      classification: supabasePublication.financial_classification || 'Non-Financial',
+      classification: (supabasePublication.financial_classification === 'Financial' ? 'Financial' : 'Non-Financial') as 'Financial' | 'Non-Financial',
                            trackingPeriod: {
           start: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
           end: supabasePublication.scraped_at ? new Date(new Date(supabasePublication.scraped_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : (supabasePublication.publication_date || '')
@@ -22,22 +22,22 @@ export const publicationAdapter = {
         matched: 0, // This would need to be calculated from actual social data
         total: 0,
         platforms: [
-                                {
-                           platform: 'Coming Soon',
-               matched: false,
-               timeDifference: 'Coming Soon',
-               postDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
-               url: '#'
-          },
-                                {
-                           platform: 'Coming Soon',
-               matched: false,
-               timeDifference: 'Coming Soon',
-               postDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
-               url: '#'
+          {
+            platform: 'Twitter' as const,
+            matched: false,
+            timeDifference: 'Coming Soon',
+            postDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
+            url: '#'
           },
           {
-            platform: 'Coming Soon',
+            platform: 'LinkedIn' as const,
+            matched: false,
+            timeDifference: 'Coming Soon',
+            postDate: supabasePublication.scraped_at ? new Date(supabasePublication.scraped_at).toISOString().split('T')[0] : (supabasePublication.publication_date || ''),
+            url: '#'
+          },
+          {
+            platform: 'Facebook' as const,
             matched: false,
             timeDifference: 'Coming Soon',
             postDate: 'Coming Soon',

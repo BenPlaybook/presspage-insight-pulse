@@ -160,7 +160,7 @@ const Index = () => {
           <div className="relative flex-1">
             <Input 
               className="pl-9" 
-              placeholder="Search accounts..." 
+              placeholder="Search accounts by name or domain..." 
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
