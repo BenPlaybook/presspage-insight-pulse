@@ -116,12 +116,18 @@ const fallbackAccounts: Account[] = [
 ];
 
 export const AccountsTable = ({ accounts = fallbackAccounts, onSort, sortDirection }: AccountsTableProps) => {
-  // Sort accounts alphabetically by name
+  // Sort accounts by date added (most recent first), with optional name sorting
   const sortedAccounts = [...accounts].sort((a, b) => {
-    if (sortDirection === 'desc') {
-      return b.name.localeCompare(a.name);
+    // If explicit sort by name is requested, use that
+    if (sortDirection && onSort) {
+      if (sortDirection === 'desc') {
+        return b.name.localeCompare(a.name);
+      }
+      return a.name.localeCompare(b.name);
     }
-    return a.name.localeCompare(b.name);
+    
+    // Default: sort by dateAdded (most recent first)
+    return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
   });
   
   return (
