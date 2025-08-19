@@ -1,6 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { UnlockFeaturesModal } from '@/components/UnlockFeaturesModal';
+import { useNavigate } from 'react-router-dom';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface AccountHeaderProps {
   name: string;
@@ -8,6 +12,8 @@ interface AccountHeaderProps {
   status: string;
   lastAnalyzed: string;
   performanceScore?: number;
+  showUnlockModal?: boolean;
+  onRunAnalysis?: () => void;
 }
 
 export const AccountHeader: React.FC<AccountHeaderProps> = ({
@@ -15,8 +21,33 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
   url,
   status,
   lastAnalyzed,
-  performanceScore
+  performanceScore,
+  showUnlockModal = false,
+  onRunAnalysis
 }) => {
+  const { user } = useAuthContext();
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+
+  const handleRunAnalysis = () => {
+    if (user) {
+      // Usuario autenticado - ir a benchmark
+      navigate('/benchmark');
+    } else {
+      // Usuario no autenticado - mostrar modal
+      setShowModal(true);
+    }
+  };
+
+  const handleContactSales = () => {
+    window.open('mailto:sales@presspage.com?subject=Unlock Competitor Insights', '_blank');
+    setShowModal(false);
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+    setShowModal(false);
+  };
   return (
     <>
       <div className="text-sm text-gray-500 mb-4">
@@ -40,12 +71,25 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
                 </div>
               </div>
             )}
-            <button className="bg-presspage-teal text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors">
+            <Button 
+              onClick={handleRunAnalysis}
+              className="bg-presspage-teal hover:bg-opacity-90 text-white px-4 py-2 rounded-md font-medium transition-colors"
+            >
               Run Analysis
-            </button>
+            </Button>
           </div>
         </div>
       </div>
+
+      {/* Modal de desbloqueo para usuarios no autenticados */}
+      {!user && (
+        <UnlockFeaturesModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onContactSales={handleContactSales}
+          onLogin={handleLogin}
+        />
+      )}
     </>
   );
 };

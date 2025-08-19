@@ -28,7 +28,7 @@ interface AccountMetricsProps {
 
 export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
   // Use real distribution channels data or fallback to mock data
-  const distributionChannels = metrics.channels?.channels?.length > 0 
+  const distributionChannels = metrics.channels?.channels && metrics.channels.channels.length > 0 
     ? metrics.channels.channels.map((channel: any) => {
         // Map source_type to display name and icon
         const getChannelInfo = (sourceType: string) => {
@@ -89,7 +89,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
                 title="Distribution Channels"
                 value={
                   <div className="flex items-center gap-2">
-                    <span>{metrics.channels.count}</span>
+                    <span>{metrics.channels?.count || 0}</span>
                     <div className="flex space-x-0.5">
                       {distributionChannels.map((channel, index) => {
                         const IconComponent = channel.icon;
@@ -103,7 +103,7 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
                     </div>
                   </div>
                 }
-                subtext={metrics.channels.description}
+                subtext={metrics.channels?.description || 'Distribution channels'}
                 icon={<Globe className="w-5 h-5" />}
                 className="h-full"
               />
@@ -138,9 +138,9 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
             <div className="h-full">
               <MetricCard
                 title="Publication–Distribution Time"
-                value={metrics.distributionTime.value}
+                value={metrics.distributionTime?.value || 'Coming Soon'}
                 trend={{
-                  value: metrics.distributionTime.trend,
+                  value: metrics.distributionTime?.trend || 'stable',
                   positive: true
                 }}
                 icon={<Zap className="w-5 h-5" />}
@@ -158,9 +158,9 @@ export const AccountMetrics: React.FC<AccountMetricsProps> = ({ metrics }) => {
             <div className="h-full">
               <MetricCard
                 title="Search Engine Position"
-                value={metrics.serpPosition.value}
-                subtext={metrics.serpPosition.positions}
-                valueClassName={metrics.serpPosition.value === '-' ? 'text-gray-400' : 'text-presspage-teal'}
+                value={metrics.serpPosition?.value || 'N/A'}
+                subtext={metrics.serpPosition?.positions || 'NA: N/A, EU: N/A'}
+                valueClassName={metrics.serpPosition?.value === '-' ? 'text-gray-400' : 'text-presspage-teal'}
                 icon={<Search className="w-5 h-5" />}
                 className="h-full"
               />
