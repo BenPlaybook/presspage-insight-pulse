@@ -68,11 +68,7 @@ const PublicationDetails = () => {
         // Load account data with all fields needed
         const { data: accountData, error: accountError } = await supabase
           .from('accounts')
-<<<<<<< HEAD
-          .select('id, name, main_website_url, logo_url, ai_performance_summary, customer_ai_summary')
-=======
           .select('*')
->>>>>>> 824d62bf1eff9d53ac07756edb2e24b9d5fa48b1
           .eq('id', id)
           .single();
 
