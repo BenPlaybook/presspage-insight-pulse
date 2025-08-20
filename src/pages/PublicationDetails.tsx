@@ -14,6 +14,8 @@ import { RelatedPublications } from '@/components/publications/RelatedPublicatio
 import { Publication } from '@/types/publications';
 import { databaseService } from '@/services/databaseService';
 import { publicationAdapter } from '@/services/publicationAdapter';
+import { accountAdapter } from '@/services/accountAdapter';
+import { Account } from '@/types/accounts';
 import { Account as SupabaseAccount } from '@/types/database';
 import { supabase } from '@/lib/supabase';
 import { generatePublicationTitle } from '@/utils/publicationUtils';
@@ -32,7 +34,7 @@ const PublicationDetails = () => {
   const { id, publicationId } = useParams<{ id: string; publicationId: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   const [publication, setPublication] = useState<Publication | null>(null);
-  const [account, setAccount] = useState<SupabaseAccount | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
   const [relatedPublications, setRelatedPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +65,14 @@ const PublicationDetails = () => {
         const convertedPublication = publicationAdapter.fromSupabase(publicationData);
         setPublication(convertedPublication);
         
-        // Load account data with specific fields to debug
+        // Load account data with all fields needed
         const { data: accountData, error: accountError } = await supabase
           .from('accounts')
+<<<<<<< HEAD
           .select('id, name, main_website_url, logo_url, ai_performance_summary, customer_ai_summary')
+=======
+          .select('*')
+>>>>>>> 824d62bf1eff9d53ac07756edb2e24b9d5fa48b1
           .eq('id', id)
           .single();
 
@@ -75,9 +81,9 @@ const PublicationDetails = () => {
           // Don't set error here, just log it
         } else {
           console.log('Raw account data from Supabase:', accountData);
-          console.log('ai_performance_summary:', accountData.ai_performance_summary);
-          console.log('customer_ai_summary:', accountData.customer_ai_summary);
-          setAccount(accountData);
+          // Convert to proper Account type using adapter
+          const convertedAccount = await accountAdapter.fromSupabase(accountData);
+          setAccount(convertedAccount);
         }
 
         // Load related publications

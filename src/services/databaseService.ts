@@ -28,7 +28,7 @@ export const databaseService = {
 
     // Apply search filter
     if (search) {
-      query = query.or(`name.ilike.%${search}%,industry.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,main_website_url.ilike.%${search}%`);
     }
 
     // Apply status filter
@@ -398,6 +398,7 @@ export const databaseService = {
         return { data: [], error: relationshipsError };
       }
 
+<<<<<<< HEAD
       if (!relationships || relationships.length === 0) {
         return { data: [], error: null };
       }
@@ -440,6 +441,12 @@ export const databaseService = {
       });
 
       return { data: enrichedPublications, error: null };
+=======
+      // Extract the related publications from the relationships and flatten
+      const relatedPublications = data?.map(rel => rel.publications).filter(Boolean) || [];
+      
+      return { data: relatedPublications as unknown as Publication[], error: null };
+>>>>>>> 824d62bf1eff9d53ac07756edb2e24b9d5fa48b1
     } catch (error) {
       console.error('Error in getRelatedPublications:', error);
       return { data: [], error };

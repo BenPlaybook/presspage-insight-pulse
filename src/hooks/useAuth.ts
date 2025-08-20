@@ -6,28 +6,45 @@ export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [userProfile, setUserProfile] = useState<{ full_access: boolean } | null>(null)
+  const [userProfile, setUserProfile] = useState<{ 
+    full_access: boolean;
+    name?: string;
+    email: string;
+    created_at: string;
+  } | null>(null)
 
   // Función para obtener el perfil del usuario
   const getUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('full_access')
+        .select('full_access, name, email, created_at')
         .eq('id', userId)
         .single()
       
       if (error) {
         console.error('Error getting user profile:', error)
         // Si no existe el usuario en la tabla, crear un perfil por defecto
-        return { full_access: false }
+        return { 
+          full_access: false,
+          email: user?.email || '',
+          created_at: new Date().toISOString()
+        }
       }
       
-      return data || { full_access: false }
+      return data || { 
+        full_access: false,
+        email: user?.email || '',
+        created_at: new Date().toISOString()
+      }
     } catch (error) {
       console.error('Error getting user profile:', error)
       // En caso de error, retornar perfil por defecto
-      return { full_access: false }
+      return { 
+        full_access: false,
+        email: user?.email || '',
+        created_at: new Date().toISOString()
+      }
     }
   }
 
@@ -47,7 +64,11 @@ export const useAuth = () => {
           getUserProfile(session.user.id).then(profile => {
             setUserProfile(profile)
           }).catch(() => {
-            setUserProfile({ full_access: false })
+            setUserProfile({ 
+              full_access: false,
+              email: session.user.email || '',
+              created_at: new Date().toISOString()
+            })
           })
         }
       } catch (error) {
@@ -73,7 +94,11 @@ export const useAuth = () => {
           getUserProfile(session.user.id).then(profile => {
             setUserProfile(profile)
           }).catch(() => {
-            setUserProfile({ full_access: false })
+            setUserProfile({ 
+              full_access: false,
+              email: session.user.email || '',
+              created_at: new Date().toISOString()
+            })
           })
         } else {
           setUserProfile(null)
@@ -142,6 +167,19 @@ export const useAuth = () => {
     return { data, error }
   }
 
+  const updateProfile = async (data: { name: string }) => {
+    // Implementation for updating profile
+    console.log('Updating profile:', data)
+  }
+
+  const refreshProfile = async () => {
+    // Implementation for refreshing profile
+    if (user?.id) {
+      const profile = await getUserProfile(user.id)
+      setUserProfile(profile)
+    }
+  }
+
   return {
     user,
     session,
@@ -151,5 +189,7 @@ export const useAuth = () => {
     signIn,
     signOut,
     resetPassword,
+    updateProfile,
+    refreshProfile,
   }
 } 

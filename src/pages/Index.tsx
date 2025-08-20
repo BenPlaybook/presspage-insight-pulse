@@ -32,7 +32,6 @@ const Index = () => {
   const [activeAccountsCount, setActiveAccountsCount] = useState(0);
   const [industries, setIndustries] = useState<string[]>([]);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const ITEMS_PER_PAGE = 10;
 
@@ -145,10 +144,6 @@ const Index = () => {
     setCurrentPage(page);
   };
 
-  // Handle sort toggle
-  const handleSort = () => {
-    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,7 +155,7 @@ const Index = () => {
           <div className="relative flex-1">
             <Input 
               className="pl-9" 
-              placeholder="Search accounts..." 
+              placeholder="Search accounts by name or domain..." 
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
@@ -228,9 +223,7 @@ const Index = () => {
           ) : (
             <>
               <AccountsTable 
-                accounts={accounts} 
-                onSort={handleSort}
-                sortDirection={sortDirection}
+                accounts={accounts}
               />
               
               {/* Pagination */}

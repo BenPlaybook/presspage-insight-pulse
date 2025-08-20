@@ -334,7 +334,7 @@ const Benchmark = () => {
             onOpenChange={setContactDialogOpen}
             title={contactDialogProps.title}
             description={contactDialogProps.description}
-            onSubmit={() => setSalesUnlocked(true)}
+            onSubmit={() => console.log('Contact sales submitted')}
           />
         </div>
       </main>

@@ -6,11 +6,18 @@ interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
   loading: boolean;
-  userProfile: { full_access: boolean } | null;
+  userProfile: { 
+    full_access: boolean;
+    name?: string;
+    email: string;
+    created_at: string;
+  } | null;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ data: any; error: any }>;
+  updateProfile: (data: { name: string }) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
