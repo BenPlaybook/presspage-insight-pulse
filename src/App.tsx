@@ -9,7 +9,7 @@ import AccountDetails from "./pages/AccountDetails";
 import PublicAccountDetails from "./components/PublicAccountDetails";
 import PublicationDetails from "./pages/PublicationDetails";
 import Benchmark from "./pages/Benchmark";
-import SharedSummary from "./pages/SharedSummary";
+
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -32,7 +32,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<EmailVerification />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/account/:accountId/summary/:summaryId" element={<SharedSummary />} />
+
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />

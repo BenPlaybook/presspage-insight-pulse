@@ -73,8 +73,7 @@ export interface Publication {
 
 export interface PublicationRelationship {
   id: string;
-  publication_id_a: string;
-  publication_id_b: string;
+  publication_id: string; // ID de la publicación relacionada
   relationship_type: string;
   confidence_score: number;
   discovered_by: string;
@@ -96,6 +95,10 @@ export interface PublicationRelationship {
   fail_counter: number;
   extract_counter: number;
   data_extract_result: string;
+  views?: number; // Estimated audience size in int8 format
+  serp_index_position?: number; // Organic position in Google search results
+  snippet?: string; // Search result snippet
+  title?: string; // Publication title for topic analysis
 }
 
 // Tipos para respuestas de API

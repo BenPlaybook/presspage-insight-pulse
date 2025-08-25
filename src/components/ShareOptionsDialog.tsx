@@ -20,6 +20,17 @@ type ShareOptionsDialogProps = {
   accountName: string;
   summaryType: 'internal' | 'customer';
   summaryContent: string;
+  prHealthData?: {
+    overallScore: number;
+    metrics: {
+      publishingVelocity: number;
+      distributionReach: number;
+      pickupQuality: number;
+      organicFindability: number;
+      competitorBenchmark: number;
+    };
+    recommendation: string;
+  };
 };
 
 export const ShareOptionsDialog = ({
@@ -30,6 +41,7 @@ export const ShareOptionsDialog = ({
   accountName,
   summaryType,
   summaryContent,
+  prHealthData,
 }: ShareOptionsDialogProps) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
   const [isSharingLink, setIsSharingLink] = React.useState(false);
@@ -39,8 +51,8 @@ export const ShareOptionsDialog = ({
     setIsSharingLink(true);
     
     try {
-      // Generate unique URL
-      const shareUrl = `https://presspage-insight-pulse.lovable.app/account/${accountId}/summary/${summaryId}`;
+      // Generate simple URL for shared view
+      const shareUrl = `https://presspage-insight-pulse.lovable.app/account/${accountId}`;
       
       // Copy to clipboard
       await navigator.clipboard.writeText(shareUrl);
@@ -58,6 +70,7 @@ export const ShareOptionsDialog = ({
           shareUrl,
           summaryType,
           summaryContent,
+          prHealthData,
           timestamp: new Date().toISOString(),
           action: 'share_link',
         }),
@@ -90,6 +103,7 @@ export const ShareOptionsDialog = ({
         accountName,
         summaryType,
         summaryContent,
+        prHealthData,
         generatedDate: new Date().toLocaleDateString(),
       });
       

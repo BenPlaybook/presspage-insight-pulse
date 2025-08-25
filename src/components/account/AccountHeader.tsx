@@ -11,9 +11,10 @@ interface AccountHeaderProps {
   url: string;
   status: string;
   lastAnalyzed: string;
-  performanceScore?: number;
+  healthScore?: number;
   showUnlockModal?: boolean;
   onRunAnalysis?: () => void;
+  disableInteractions?: boolean; // Disable interactions for external users
 }
 
 export const AccountHeader: React.FC<AccountHeaderProps> = ({
@@ -21,9 +22,10 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
   url,
   status,
   lastAnalyzed,
-  performanceScore,
+  healthScore,
   showUnlockModal = false,
-  onRunAnalysis
+  onRunAnalysis,
+  disableInteractions = false
 }) => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
@@ -50,9 +52,11 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
   };
   return (
     <>
-      <div className="text-sm text-gray-500 mb-4">
-        <Link to="/" className="hover:text-presspage-teal">Dashboard</Link> &gt; {name}
-      </div>
+      {!disableInteractions && (
+        <div className="text-sm text-gray-500 mb-4">
+          <Link to="/" className="hover:text-presspage-teal">Dashboard</Link> &gt; {name}
+        </div>
+      )}
       
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex justify-between items-start">
@@ -61,22 +65,24 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
             <p className="text-sm text-gray-500">{url} • {status} • Last analyzed: {lastAnalyzed}</p>
           </div>
           <div className="flex items-center gap-4">
-            {performanceScore !== undefined && (
+            {healthScore !== undefined && (
               <div className="text-center">
-                <div className="text-3xl font-bold text-presspage-teal">
-                  {performanceScore}
+                <div className="text-3xl font-bold text-green-600">
+                  {healthScore}
                 </div>
                 <div className="text-xs text-gray-500">
-                  PR Score
+                  PR Health Score
                 </div>
               </div>
             )}
-            <Button 
-              onClick={handleRunAnalysis}
-              className="bg-presspage-teal hover:bg-opacity-90 text-white px-4 py-2 rounded-md font-medium transition-colors"
-            >
-              Run Analysis
-            </Button>
+            {!disableInteractions && (
+              <Button 
+                onClick={handleRunAnalysis}
+                className="bg-presspage-teal hover:bg-opacity-90 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Run Analysis
+              </Button>
+            )}
           </div>
         </div>
       </div>

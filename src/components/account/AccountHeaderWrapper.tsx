@@ -8,7 +8,8 @@ interface AccountHeaderWrapperProps {
   url?: string;
   status?: string;
   lastAnalyzed?: string;
-  performanceScore?: number;
+  healthScore?: number;
+  disableInteractions?: boolean;
 }
 
 export const AccountHeaderWrapper: React.FC<AccountHeaderWrapperProps> = ({
@@ -17,7 +18,8 @@ export const AccountHeaderWrapper: React.FC<AccountHeaderWrapperProps> = ({
   url,
   status,
   lastAnalyzed,
-  performanceScore
+  healthScore,
+  disableInteractions = false
 }) => {
   // Si se pasa un account, usar sus datos
   if (account) {
@@ -27,7 +29,8 @@ export const AccountHeaderWrapper: React.FC<AccountHeaderWrapperProps> = ({
         url={account.main_website_url}
         status={account.is_actively_tracked ? 'Active' : 'Processing'}
         lastAnalyzed="Coming Soon"
-        performanceScore={performanceScore}
+        healthScore={healthScore}
+        disableInteractions={disableInteractions}
       />
     );
   }
@@ -39,7 +42,8 @@ export const AccountHeaderWrapper: React.FC<AccountHeaderWrapperProps> = ({
       url={url || 'https://example.com'}
       status={status || 'Active'}
       lastAnalyzed={lastAnalyzed || 'Coming Soon'}
-      performanceScore={performanceScore}
+      healthScore={healthScore}
+      disableInteractions={disableInteractions}
     />
   );
 };

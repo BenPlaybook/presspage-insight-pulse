@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { AccountHeaderWrapper } from '@/components/account/AccountHeaderWrapper';
 import { AccountMetrics } from '@/components/account/AccountMetrics';
+import AccountInsights from '@/components/account/AccountInsights';
 import { AccountTabs } from '@/components/account/AccountTabs';
 import { BlurredPublicationsTable } from '@/components/publications/BlurredPublicationsTable';
 import { StickyBenchmarkButton } from '@/components/account/StickyBenchmarkButton';
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Lock, TrendingUp, Users, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { samplePublications } from '@/components/publications/SamplePublicationsData';
+import { prHealthMetricsService } from '@/services/prHealthMetricsService';
 
 const PublicAccountDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +33,7 @@ const PublicAccountDetails = () => {
   const [account, setAccount] = useState<SupabaseAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [prHealthMetrics, setPrHealthMetrics] = useState<any>(null);
 
   // Load account data and publications from Supabase
   useEffect(() => {
@@ -67,6 +70,79 @@ const PublicAccountDetails = () => {
         if (!user && (!publicationsData || publicationsData.length === 0)) {
           setPublications(samplePublications);
           setFilteredPublications(samplePublications);
+        }
+
+                 // Calcular métricas de PR Health Score
+         if (id) {
+           try {
+             const metrics = await prHealthMetricsService.calculatePRHealthMetrics(id);
+             setPrHealthMetrics(metrics);
+             
+             // Debug: Log completo de métricas para PDF
+             console.log('🔍 PDF Debug - Complete PR Health Metrics:', {
+               metrics,
+               hasPublishingVelocity: !!metrics?.publishingVelocity,
+               hasDistributionReach: !!metrics?.distributionReach,
+               hasOrganicFindability: !!metrics?.organicFindability,
+               publishingVelocityScore: metrics?.publishingVelocity?.scorePercentage,
+               distributionReachScore: metrics?.distributionReach?.scorePercentage,
+               organicFindabilityScore: metrics?.organicFindability?.scorePercentage
+             });
+            
+                         // Log Publishing Velocity calculation details
+             if (metrics?.publishingVelocity) {
+               console.log('📊 Publishing Velocity Calculation:', {
+                 accountId: id,
+                 averageDelay: `${metrics.publishingVelocity.averageDelay}h`,
+                 channelFactor: `${metrics.publishingVelocity.channelFactor}h`,
+                 totalScore: `${metrics.publishingVelocity.totalScore}h`,
+                 scorePercentage: `${metrics.publishingVelocity.scorePercentage}%`,
+                 channelsCount: metrics.publishingVelocity.channels.length,
+                 channels: metrics.publishingVelocity.channels.map(ch => ({
+                   sourceType: ch.sourceType,
+                   delay: `${ch.delay.toFixed(1)}h`
+                 }))
+               });
+             }
+
+                           // Log Distribution Reach calculation details
+              if (metrics?.distributionReach) {
+                console.log('🌐 Distribution Reach Calculation:', {
+                  accountId: id,
+                  totalViews: metrics.distributionReach.totalViews.toLocaleString(),
+                  thirdPartyLocations: metrics.distributionReach.thirdPartyLocations,
+                  locationFactor: metrics.distributionReach.locationFactor.toLocaleString(),
+                  totalScore: metrics.distributionReach.totalScore.toLocaleString(),
+                  scorePercentage: `${metrics.distributionReach.scorePercentage}%`,
+                  locationsCount: metrics.distributionReach.locations.length,
+                  locations: metrics.distributionReach.locations.map(loc => ({
+                    sourceType: loc.sourceType,
+                    views: loc.views.toLocaleString(),
+                    locationName: loc.locationName
+                  }))
+                });
+              }
+
+              // Log Organic Findability calculation details
+              if (metrics?.organicFindability) {
+                console.log('🔍 Organic Findability Calculation:', {
+                  accountId: id,
+                  serpScore: `${metrics.organicFindability.serpScore}%`,
+                  averageSerpPosition: metrics.organicFindability.averageSerpPosition,
+                  prTopicsCoverage: metrics.organicFindability.prTopicsCoverage,
+                  totalKeywords: metrics.organicFindability.totalKeywords,
+                  totalScore: metrics.organicFindability.totalScore.toFixed(1),
+                  scorePercentage: `${metrics.organicFindability.scorePercentage}%`,
+                  serpDetailsCount: metrics.organicFindability.serpDetails.length,
+                  topKeywords: metrics.organicFindability.topicDetails.slice(0, 5).map(kw => ({
+                    keyword: kw.keyword,
+                    frequency: kw.frequency
+                  }))
+                });
+              }
+          } catch (err) {
+            console.error('Error calculating PR Health metrics:', err);
+          }
         }
       } catch (err) {
         console.error('Error in loadAccountData:', err);
@@ -135,14 +211,15 @@ const PublicAccountDetails = () => {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Account Header */}
-        <AccountHeaderWrapper 
-          name={account.name || "Vinted"}
-          url={account.main_website_url || "https://vinted.com"}
-          status="Active"
-          lastAnalyzed="Coming Soon"
-          performanceScore={undefined}
-        />
+                 {/* Account Header */}
+         <AccountHeaderWrapper 
+           name={account.name || "Vinted"}
+           url={account.main_website_url || "https://vinted.com"}
+           status="Active"
+           lastAnalyzed="Coming Soon"
+           healthScore={92}
+           disableInteractions={!user} // Disable interactions for non-authenticated users
+         />
         
         {/* Account Metrics */}
         <div className="mb-8">
@@ -169,34 +246,95 @@ const PublicAccountDetails = () => {
           />
         </div>
 
-        {/* Public Preview Banner - Solo para usuarios no logueados */}
-        {!user && (
-          <Card className="mb-6 border-presspage-blue/20 bg-gradient-to-r from-presspage-blue/5 to-presspage-teal/5">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-presspage-blue/10 rounded-full flex items-center justify-center">
-                    <Lock className="w-5 h-5 text-presspage-blue" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Public Preview Mode</h3>
-                    <p className="text-sm text-gray-600">
-                      You're viewing limited data. Sign in for full access to competitor insights.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Button onClick={handleLogin} variant="outline">
-                    Sign In
-                  </Button>
-                  <Button onClick={handleSignUp} className="bg-presspage-blue hover:bg-presspage-blue/90">
-                    Get Started
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                 {/* Account Insights */}
+         <div className="mb-6">
+           <AccountInsights 
+             internalSummary={account?.ai_performance_summary || "No internal analysis available"}
+             customerSummary={account?.customer_ai_summary || "No customer summary available"}
+             accountId={id || '1'}
+             summaryId={`summary-${id || '1'}-${Date.now()}`}
+             accountName={account?.name || 'Account'}
+             aiSummary={account?.ai_performance_summary}
+             customerAiSummary={account?.customer_ai_summary}
+             prHealthData={{
+               overallScore: 92,
+               metrics: {
+                 publishingVelocity: prHealthMetrics?.publishingVelocity?.scorePercentage || 88,
+                 distributionReach: prHealthMetrics?.distributionReach?.scorePercentage || 95,
+                 pickupQuality: 85,
+                 organicFindability: prHealthMetrics?.organicFindability?.scorePercentage || 90,
+                 competitorBenchmark: 89
+               },
+               recommendation: (() => {
+                 // Si tenemos datos reales, construir recomendación detallada
+                 if (prHealthMetrics?.publishingVelocity || prHealthMetrics?.distributionReach || prHealthMetrics?.organicFindability) {
+                   const parts = [];
+                   
+                   if (prHealthMetrics?.publishingVelocity) {
+                     parts.push(`Publishing Velocity: ${prHealthMetrics.publishingVelocity.totalScore.toFixed(1)}h average delay across ${prHealthMetrics.publishingVelocity.channels.length} channels.`);
+                   }
+                   
+                   if (prHealthMetrics?.distributionReach) {
+                     parts.push(`Distribution Reach: ${prHealthMetrics.distributionReach.totalViews.toLocaleString()} total views across ${prHealthMetrics.distributionReach.thirdPartyLocations} third-party locations.`);
+                   }
+                   
+                   if (prHealthMetrics?.organicFindability) {
+                     parts.push(`Organic Findability: ${prHealthMetrics.organicFindability.serpScore.toFixed(1)}% SERP score with ${prHealthMetrics.organicFindability.prTopicsCoverage} unique keywords.`);
+                   }
+                   
+                   // Evaluar rendimiento general
+                   const pvScore = prHealthMetrics?.publishingVelocity?.scorePercentage || 0;
+                   const drScore = prHealthMetrics?.distributionReach?.scorePercentage || 0;
+                   const ofScore = prHealthMetrics?.organicFindability?.scorePercentage || 0;
+                   
+                   if (pvScore >= 80 && drScore >= 80 && ofScore >= 80) {
+                     parts.push('Excellent performance across all metrics.');
+                   } else {
+                     parts.push('Consider optimizing your PR strategy.');
+                   }
+                   
+                   return parts.join('\n\n');
+                 }
+                 
+                 // Recomendación por defecto si no hay datos reales
+                 return "Excellent performance across all metrics.\n\nFocus on maintaining high distribution reach and consider expanding into new markets to further improve competitor benchmarking.";
+               })()
+             }}
+             forceExpanded={!user} // Force expanded for non-authenticated users
+             disableInteractions={!user} // Disable interactions for non-authenticated users
+           />
+         </div>
+
+
+
+                 {/* Public Preview Banner - Solo para usuarios no logueados */}
+         {!user && (
+           <Card className="mb-6 border-presspage-teal/20 bg-gradient-to-r from-presspage-teal/5 to-presspage-blue/5">
+             <CardContent className="p-6">
+               <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 bg-presspage-teal/10 rounded-full flex items-center justify-center">
+                     <Lock className="w-5 h-5 text-presspage-teal" />
+                   </div>
+                   <div>
+                     <h3 className="font-semibold text-gray-900">Shared Account View</h3>
+                     <p className="text-sm text-gray-600">
+                       You're viewing a shared account summary. Sign in for full access to all features.
+                     </p>
+                   </div>
+                 </div>
+                 <div className="flex gap-3">
+                   <Button onClick={handleLogin} variant="outline">
+                     Sign In
+                   </Button>
+                   <Button onClick={handleSignUp} className="bg-presspage-teal hover:bg-presspage-teal/90">
+                     Get Full Access
+                   </Button>
+                 </div>
+               </div>
+             </CardContent>
+           </Card>
+         )}
 
         {/* Publications Section */}
         {user ? (

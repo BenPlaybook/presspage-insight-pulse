@@ -85,12 +85,77 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: '#9ca3af',
   },
+  prHealthSection: {
+    marginTop: 20,
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+  },
+  prHealthTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 10,
+  },
+  prHealthScore: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2563eb',
+    marginBottom: 10,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: '#374151',
+    flex: 1,
+  },
+  metricValue: {
+    fontSize: 10,
+    color: '#1f2937',
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  recommendationContainer: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#fef3c7',
+    borderRadius: 6,
+    borderLeft: '3px solid #f59e0b',
+  },
+  recommendationTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 8,
+  },
+  recommendation: {
+    fontSize: 10,
+    color: '#374151',
+    lineHeight: 1.4,
+  },
 });
 
 type PDFSummaryDocumentProps = {
   accountName: string;
   summaryType: 'internal' | 'customer';
   summaryContent: string;
+  prHealthData?: {
+    overallScore: number;
+    metrics: {
+      publishingVelocity: number;
+      distributionReach: number;
+      pickupQuality: number;
+      organicFindability: number;
+      competitorBenchmark: number;
+    };
+    recommendation: string;
+  };
   generatedDate: string;
 };
 
@@ -98,6 +163,7 @@ export const PDFSummaryDocument = ({
   accountName,
   summaryType,
   summaryContent,
+  prHealthData,
   generatedDate,
 }: PDFSummaryDocumentProps) => {
   // Handle empty or null content
@@ -228,6 +294,50 @@ export const PDFSummaryDocument = ({
               })}
             </View>
           ))}
+
+          {/* PR Health Score Section */}
+          {prHealthData && (
+            <View style={styles.prHealthSection}>
+              <Text style={styles.prHealthTitle}>PR Health Score</Text>
+              <Text style={styles.prHealthScore}>{prHealthData.overallScore}%</Text>
+              
+              <View style={styles.metricRow}>
+                <Text style={styles.metricLabel}>Publishing Velocity</Text>
+                <Text style={styles.metricValue}>{prHealthData.metrics.publishingVelocity}%</Text>
+              </View>
+              
+              <View style={styles.metricRow}>
+                <Text style={styles.metricLabel}>Distribution Reach</Text>
+                <Text style={styles.metricValue}>{prHealthData.metrics.distributionReach}%</Text>
+              </View>
+              
+              <View style={styles.metricRow}>
+                <Text style={styles.metricLabel}>Pickup Quality</Text>
+                <Text style={styles.metricValue}>{prHealthData.metrics.pickupQuality}%</Text>
+              </View>
+              
+              <View style={styles.metricRow}>
+                <Text style={styles.metricLabel}>Organic Findability</Text>
+                <Text style={styles.metricValue}>{prHealthData.metrics.organicFindability}%</Text>
+              </View>
+              
+              <View style={styles.metricRow}>
+                <Text style={styles.metricLabel}>Competitor Benchmark</Text>
+                <Text style={styles.metricValue}>{prHealthData.metrics.competitorBenchmark}%</Text>
+              </View>
+
+              {prHealthData.recommendation && (
+                <View style={styles.recommendationContainer}>
+                  <Text style={styles.recommendationTitle}>Recommendations</Text>
+                  {prHealthData.recommendation.split('\n\n').map((paragraph, index) => (
+                    <Text key={index} style={styles.recommendation}>
+                      {paragraph}
+                    </Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.footer}>
