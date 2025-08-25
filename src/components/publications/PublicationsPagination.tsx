@@ -92,7 +92,7 @@ export const PublicationsPagination: React.FC<PublicationsPaginationProps> = ({
   };
 
   return (
-    <Pagination className="mt-6">
+    <Pagination className="mt-6 mb-20">
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious 

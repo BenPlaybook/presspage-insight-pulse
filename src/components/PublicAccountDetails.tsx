@@ -204,7 +204,12 @@ const PublicAccountDetails = () => {
     );
   }
 
-  const totalPages = Math.ceil(filteredPublications.length / 10);
+  const itemsPerPage = 15;
+  const totalPages = Math.ceil(filteredPublications.length / itemsPerPage);
+  const paginatedPublications = filteredPublications.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -341,7 +346,7 @@ const PublicAccountDetails = () => {
           // Usuario autenticado - mostrar tabla completa
           <AccountTabs
             accountId={id || ''}
-            publications={filteredPublications}
+            publications={paginatedPublications}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}

@@ -208,7 +208,7 @@ const AccountDetails = () => {
     }
   } : null;
   
-  const itemsPerPage = 4;
+  const itemsPerPage = 15;
   const totalPages = Math.ceil(filteredPublications.length / itemsPerPage);
   const paginatedPublications = filteredPublications.slice(
     (currentPage - 1) * itemsPerPage,
