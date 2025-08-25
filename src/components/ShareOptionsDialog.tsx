@@ -20,6 +20,8 @@ type ShareOptionsDialogProps = {
   accountName: string;
   summaryType: 'internal' | 'customer';
   summaryContent: string;
+  internalContent?: string;
+  customerContent?: string;
   prHealthData?: {
     overallScore: number;
     metrics: {
@@ -41,6 +43,8 @@ export const ShareOptionsDialog = ({
   accountName,
   summaryType,
   summaryContent,
+  internalContent,
+  customerContent,
   prHealthData,
 }: ShareOptionsDialogProps) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
@@ -98,11 +102,13 @@ export const ShareOptionsDialog = ({
     setIsGeneratingPDF(true);
     
     try {
-      // Generate PDF document
+      // Generate PDF document with both internal and customer content
       const pdfDocument = PDFSummaryDocument({
         accountName,
         summaryType,
         summaryContent,
+        internalContent,
+        customerContent,
         prHealthData,
         generatedDate: new Date().toLocaleDateString(),
       });

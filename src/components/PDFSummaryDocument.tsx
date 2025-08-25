@@ -145,6 +145,8 @@ type PDFSummaryDocumentProps = {
   accountName: string;
   summaryType: 'internal' | 'customer';
   summaryContent: string;
+  internalContent?: string;
+  customerContent?: string;
   prHealthData?: {
     overallScore: number;
     metrics: {
@@ -163,6 +165,8 @@ export const PDFSummaryDocument = ({
   accountName,
   summaryType,
   summaryContent,
+  internalContent,
+  customerContent,
   prHealthData,
   generatedDate,
 }: PDFSummaryDocumentProps) => {
@@ -279,21 +283,45 @@ export const PDFSummaryDocument = ({
         </View>
 
         <View style={styles.content}>
-          {sections.map((section, index) => (
-            <View key={index} style={styles.section}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              {section.items.map((item, itemIndex) => {
-                // Check if this item looks like a section header (contains colon and is short)
-                const isSectionHeader = item.includes(':') && item.length < 50;
-                
-                return (
-                  <Text key={itemIndex} style={isSectionHeader ? styles.bulletPointBold : styles.bulletPoint}>
-                    • {item}
-                  </Text>
-                );
-              })}
+          {/* Internal Insights Section */}
+          {internalContent && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Internal Insights</Text>
+              {parseContent(internalContent).map((section, index) => (
+                <View key={index} style={styles.section}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  {section.items.map((item, itemIndex) => {
+                    const isSectionHeader = item.includes(':') && item.length < 50;
+                    return (
+                      <Text key={itemIndex} style={isSectionHeader ? styles.bulletPointBold : styles.text}>
+                        {item}
+                      </Text>
+                    );
+                  })}
+                </View>
+              ))}
             </View>
-          ))}
+          )}
+
+          {/* Customer Insights Section */}
+          {customerContent && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Customer Insights</Text>
+              {parseContent(customerContent).map((section, index) => (
+                <View key={index} style={styles.section}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  {section.items.map((item, itemIndex) => {
+                    const isSectionHeader = item.includes(':') && item.length < 50;
+                    return (
+                      <Text key={itemIndex} style={isSectionHeader ? styles.bulletPointBold : styles.text}>
+                        {item}
+                      </Text>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* PR Health Score Section */}
           {prHealthData && (

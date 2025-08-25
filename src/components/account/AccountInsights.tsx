@@ -332,6 +332,8 @@ const AccountInsights = ({
            ? (aiSummary || internalSummary) 
            : (customerAiSummary || customerSummary)
          }
+         internalContent={aiSummary || internalSummary}
+         customerContent={customerAiSummary || customerSummary}
          prHealthData={finalPrHealthData}
        />
     </div>
