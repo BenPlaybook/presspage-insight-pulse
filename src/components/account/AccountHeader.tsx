@@ -66,12 +66,25 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
           </div>
           <div className="flex items-center gap-4">
             {healthScore !== undefined && (
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">
-                  {healthScore}
+              <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                <div className={`text-3xl font-bold ${
+                  healthScore >= 80 ? 'text-green-600' : 
+                  healthScore >= 60 ? 'text-yellow-600' : 
+                  healthScore >= 40 ? 'text-orange-600' : 'text-red-600'
+                }`}>
+                  {healthScore}%
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-600 font-medium">
                   PR Health Score
+                </div>
+                <div className={`text-xs mt-1 ${
+                  healthScore >= 80 ? 'text-green-600' : 
+                  healthScore >= 60 ? 'text-yellow-600' : 
+                  healthScore >= 40 ? 'text-orange-600' : 'text-red-600'
+                }`}>
+                  {healthScore >= 80 ? 'Excellent' : 
+                   healthScore >= 60 ? 'Good' : 
+                   healthScore >= 40 ? 'Moderate' : 'Poor'}
                 </div>
               </div>
             )}
