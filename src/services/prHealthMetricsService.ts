@@ -30,9 +30,10 @@ export interface DistributionReachData {
 
 export interface OrganicFindabilityData {
   serpScore: number; // SERP Score (0-100)
-  prTopicsCoverage: number; // Number of unique keywords
+  prTopicsCoverage: number; // Number of unique search queries
+  trendsScore: number; // Google Trends proxy score (0-100)
   averageSerpPosition: number; // Average SERP position
-  totalKeywords: number; // Total unique keywords found
+  totalKeywords: number; // Total unique search queries found
   totalScore: number; // Combined weighted score
   scorePercentage: number; // porcentaje para el PR Health Score
   serpDetails: {
@@ -50,7 +51,7 @@ export interface PRHealthMetrics {
   publishingVelocity: PublishingVelocityData;
   distributionReach: DistributionReachData;
   organicFindability: OrganicFindabilityData;
-  // Futuras métricas se agregarán aquí
+  pickUpQuality: PickUpQualityData;
 }
 
 export const prHealthMetricsService = {
@@ -69,8 +70,14 @@ export const prHealthMetricsService = {
   async calculatePublishingVelocity(accountId: string): Promise<PublishingVelocityData> {
     try {
       // Obtener publicaciones de los últimos 30 días
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      
+      console.log('📊 Publishing Velocity Debug: Current date:', now.toISOString());
+      console.log('📊 Publishing Velocity Debug: Current date (local):', now.toLocaleDateString('es-ES'));
+      console.log('📊 Publishing Velocity Debug: Searching from', thirtyDaysAgo.toISOString(), 'to', now.toISOString());
+      console.log('📊 Publishing Velocity Debug: Date range (local):', thirtyDaysAgo.toLocaleDateString('es-ES'), 'to', now.toLocaleDateString('es-ES'));
 
       // Obtener publicaciones con sus content sources
       const { data: publications, error: pubError } = await supabase
@@ -115,21 +122,19 @@ export const prHealthMetricsService = {
       for (const [originalDate, groupPublications] of Object.entries(publicationGroups)) {
         if (groupPublications.length === 0) continue;
 
-        // Ordenar por fecha de publicación original
-        const sortedPublications = groupPublications.sort((a, b) => 
-          new Date(a.publication_date).getTime() - new Date(b.publication_date).getTime()
-        );
-
-        // La primera publicación es la original (Media Room)
-        const originalPublication = sortedPublications[0];
+        // Las publicaciones ya están ordenadas: Media Room primero, luego otros
+        const originalPublication = groupPublications[0];
         const originalDateObj = new Date(originalPublication.publication_date);
+        
+        console.log(`📊 Publishing Velocity Debug: Processing group for date ${originalDate}`);
+        console.log(`📊 Publishing Velocity Debug: Original publication (${originalPublication.content_sources?.source_type || 'Unknown'}) at ${originalPublication.publication_date}`);
 
-        // Calcular delays para las demás publicaciones
-        for (let i = 1; i < sortedPublications.length; i++) {
-          const pub = sortedPublications[i];
+        // Calcular delays para las demás publicaciones (distribución en canales)
+        for (let i = 1; i < groupPublications.length; i++) {
+          const pub = groupPublications[i];
           const pubDate = new Date(pub.publication_date);
           
-          // Calcular delay en horas
+          // Calcular delay en horas (como en tu ejemplo: Twitter = 24h, LinkedIn = 36h)
           const delayHours = (pubDate.getTime() - originalDateObj.getTime()) / (1000 * 60 * 60);
           
           if (delayHours > 0 && delayHours < 168) { // Máximo 7 días de delay
@@ -141,28 +146,39 @@ export const prHealthMetricsService = {
               publicationDate: pub.publication_date,
               scrapedDate: pub.scraped_at
             });
+            
+            console.log(`📊 Publishing Velocity Debug: Channel ${pub.content_sources?.source_type || 'Unknown'} delay: ${delayHours.toFixed(1)}h`);
           }
         }
       }
 
-      // Calcular métricas
+      // Calcular métricas según la definición exacta
       const averageDelay = totalDelays.length > 0 
         ? totalDelays.reduce((sum, delay) => sum + delay, 0) / totalDelays.length 
         : 0;
 
-      // Channel Factor: número de canales únicos × 0.5
+      // Channel Factor: número de canales únicos × 0.5 (configurable)
       const uniqueChannels = new Set(allChannels.map(ch => ch.sourceType)).size;
-      const channelFactor = uniqueChannels * 0.5;
+      const channelFactor = uniqueChannels * 0.5; // factor_value = 0.5
 
-      // Publishing Velocity Score total
+      // Publishing Velocity Score = average_delay + channel_factor
       const totalScore = averageDelay + channelFactor;
 
       // Convertir a porcentaje (menor tiempo = mejor score)
-      // 0-24h = 100%, 24-48h = 80%, 48-72h = 60%, 72h+ = 40%
+      // Basado en el ejemplo: 31h = ~1.3 días = score alto
       let scorePercentage = 100;
-      if (totalScore > 72) scorePercentage = 40;
-      else if (totalScore > 48) scorePercentage = 60;
-      else if (totalScore > 24) scorePercentage = 80;
+      if (totalScore > 72) scorePercentage = 40;      // > 3 días
+      else if (totalScore > 48) scorePercentage = 60;  // 2-3 días  
+      else if (totalScore > 24) scorePercentage = 80;  // 1-2 días
+      else if (totalScore > 12) scorePercentage = 90;  // 0.5-1 día
+      else if (totalScore > 0) scorePercentage = 95;   // < 0.5 día
+
+      console.log('📊 Publishing Velocity Debug - Final Calculation:');
+      console.log(`📊 Average Delay: ${averageDelay.toFixed(1)}h`);
+      console.log(`📊 Unique Channels: ${uniqueChannels}`);
+      console.log(`📊 Channel Factor: ${channelFactor.toFixed(1)}h`);
+      console.log(`📊 Total Score: ${totalScore.toFixed(1)}h`);
+      console.log(`📊 Score Percentage: ${scorePercentage}%`);
 
       return {
         averageDelay: Math.round(averageDelay * 100) / 100,
@@ -180,7 +196,7 @@ export const prHealthMetricsService = {
 
   /**
    * Agrupa publicaciones por fecha de publicación original
-   * (asumiendo que publicaciones con la misma fecha son del mismo evento)
+   * Identifica la publicación original (Media Room) basándose en el tipo de fuente
    */
   groupPublicationsByOriginalDate(publications: any[]): Record<string, any[]> {
     const groups: Record<string, any[]> = {};
@@ -193,6 +209,24 @@ export const prHealthMetricsService = {
       groups[dateKey].push(pub);
     }
     
+    // Para cada grupo, ordenar para identificar la publicación original
+    for (const dateKey in groups) {
+      const group = groups[dateKey];
+      
+      // Ordenar por tipo de fuente: Media Room primero, luego otros
+      group.sort((a, b) => {
+        const aSourceType = a.content_sources?.source_type?.toLowerCase() || '';
+        const bSourceType = b.content_sources?.source_type?.toLowerCase() || '';
+        
+        // Media Room tiene prioridad (es la publicación original)
+        if (aSourceType.includes('media room') || aSourceType.includes('press room')) return -1;
+        if (bSourceType.includes('media room') || bSourceType.includes('press room')) return 1;
+        
+        // Luego ordenar por fecha de publicación
+        return new Date(a.publication_date).getTime() - new Date(b.publication_date).getTime();
+      });
+    }
+    
     return groups;
   },
 
@@ -201,63 +235,43 @@ export const prHealthMetricsService = {
    */
   getDefaultPublishingVelocity(): PublishingVelocityData {
     return {
-      averageDelay: 24.5,
-      channelFactor: 1.0,
-      totalScore: 25.5,
-      scorePercentage: 88, // Score realista por defecto
-      channels: [
-        {
-          sourceType: 'Twitter',
-          delay: 24,
-          publicationDate: '2025-01-15T09:00:00Z',
-          scrapedDate: '2025-01-16T09:00:00Z'
-        },
-        {
-          sourceType: 'LinkedIn',
-          delay: 36,
-          publicationDate: '2025-01-15T09:00:00Z',
-          scrapedDate: '2025-01-16T21:00:00Z'
-        }
-      ]
+      averageDelay: 0,
+      channelFactor: 0,
+      totalScore: 0,
+      scorePercentage: 0, // Sin datos = 0
+      channels: []
     };
   },
 
   /**
    * Calcula el Distribution Reach Score basado en:
-   * - Total estimated audience size (views from publication_relationship)
-   * - Number of third-party locations picking up the story
-   * - Factor based on distribution breadth
+   * - Unique Distribution Outlets: Count distinct outlets/domains
+   * - Weighted by Audience Size: If available, weight by audience size
+   * - Normalize to 0-100 score
    */
   async calculateDistributionReach(accountId: string): Promise<DistributionReachData> {
     try {
       // Obtener publicaciones de los últimos 30 días
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now);
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      
+      console.log('🌐 Distribution Reach Debug: Current date:', now.toISOString());
+      console.log('🌐 Distribution Reach Debug: Searching from', thirtyDaysAgo.toISOString(), 'to', now.toISOString());
 
-      // Obtener publication_relationships con views para este account
+      // Obtener publication_relationships con las columnas disponibles
       const { data: relationships, error: relError } = await supabase
         .from('publication_relationships')
         .select(`
           id,
-          views,
-          publication_date,
           source,
-          type,
-          content_sources,
-          publications!publication_relationships_publication_id_fkey (
-            id,
-            title,
-            content_source_id,
-            content_sources (
-              id,
-              source_type,
-              label
-            )
-          )
+          publication_date,
+          title,
+          snippet,
+          account_id
         `)
         .eq('account_id', accountId)
         .gte('publication_date', thirtyDaysAgo.toISOString())
-        .not('views', 'is', null)
         .order('publication_date', { ascending: false });
 
       if (relError) {
@@ -273,49 +287,60 @@ export const prHealthMetricsService = {
 
       console.log('🌐 Distribution Reach Debug: Found', relationships.length, 'relationships');
 
-      // Calcular métricas
-      const totalViews = relationships.reduce((sum, rel) => sum + (rel.views || 0), 0);
-      
-      // Contar ubicaciones únicas de terceros (basado en source y content_sources)
-      const uniqueLocations = new Set();
-      const locationDetails: { sourceType: string; views: number; publicationDate: string; locationName?: string }[] = [];
+      // Paso 1: Unique Distribution Outlets
+      const uniqueOutlets = new Set();
+      const outletDetails: { outletDomain: string; publicationDate: string; title: string }[] = [];
 
       relationships.forEach(rel => {
-        const sourceType = rel.publications?.content_sources?.source_type || rel.source || 'Unknown';
-        const locationName = rel.publications?.content_sources?.label || rel.source || 'Unknown';
+        // Usar source como identificador del outlet (ej: "spoton.com")
+        const outletDomain = rel.source || 'Unknown';
+        uniqueOutlets.add(outletDomain);
         
-        uniqueLocations.add(locationName);
-        
-        locationDetails.push({
-          sourceType,
-          views: rel.views || 0,
+        outletDetails.push({
+          outletDomain,
           publicationDate: rel.publication_date,
-          locationName
+          title: rel.title || 'No title'
         });
       });
 
-      const thirdPartyLocations = uniqueLocations.size;
-      
-      // Location Factor: número de ubicaciones únicas × factor (ej: 1000)
-      const locationFactor = thirdPartyLocations * 1000;
-      
-      // Distribution Reach Score total
-      const totalScore = totalViews + locationFactor;
+      const uniqueOutletsCount = uniqueOutlets.size;
+      console.log('🌐 Distribution Reach Debug: Found', uniqueOutletsCount, 'unique outlets');
+      console.log('🌐 Distribution Reach Debug: Outlets found:', Array.from(uniqueOutlets));
 
-      // Convertir a porcentaje (mayor alcance = mejor score)
-      // 0-10k views = 40%, 10k-50k = 60%, 50k-100k = 80%, 100k+ = 100%
-      let scorePercentage = 40;
-      if (totalViews >= 100000) scorePercentage = 100;
-      else if (totalViews >= 50000) scorePercentage = 80;
-      else if (totalViews >= 10000) scorePercentage = 60;
+      // Paso 2: Score basado en número de outlets únicos
+      // No tenemos views, así que usamos solo el conteo de outlets
+      const weightedScore = uniqueOutletsCount;
+
+      // Paso 3: Normalize to 0-100 score
+      // Basado en el número de outlets únicos y audience
+      let scorePercentage = 0;
+      
+      if (weightedScore >= 20) scorePercentage = 100;      // 20+ outlets con audience alto
+      else if (weightedScore >= 15) scorePercentage = 90;  // 15-19 outlets
+      else if (weightedScore >= 10) scorePercentage = 80;  // 10-14 outlets
+      else if (weightedScore >= 7) scorePercentage = 70;   // 7-9 outlets
+      else if (weightedScore >= 5) scorePercentage = 60;   // 5-6 outlets
+      else if (weightedScore >= 3) scorePercentage = 50;   // 3-4 outlets
+      else if (weightedScore >= 1) scorePercentage = 30;   // 1-2 outlets
+      else scorePercentage = 0;                            // 0 outlets
+
+      console.log('🌐 Distribution Reach Debug - Final Calculation:');
+      console.log('🌐 Unique Outlets:', uniqueOutletsCount);
+      console.log('🌐 Weighted Score:', weightedScore.toFixed(2));
+      console.log('🌐 Score Percentage:', scorePercentage + '%');
 
       return {
-        totalViews,
-        thirdPartyLocations,
-        locationFactor,
-        totalScore,
+        totalViews: 0, // No tenemos datos de views
+        thirdPartyLocations: uniqueOutletsCount,
+        locationFactor: weightedScore,
+        totalScore: weightedScore,
         scorePercentage,
-        locations: locationDetails
+        locations: outletDetails.map(outlet => ({
+          sourceType: outlet.outletDomain,
+          views: 0, // No tenemos datos de views
+          publicationDate: outlet.publicationDate,
+          locationName: outlet.outletDomain
+        }))
       };
 
     } catch (error) {
@@ -329,54 +354,39 @@ export const prHealthMetricsService = {
    */
   getDefaultDistributionReach(): DistributionReachData {
     return {
-      totalViews: 125000,
-      thirdPartyLocations: 8,
-      locationFactor: 8000,
-      totalScore: 133000,
-      scorePercentage: 95, // Score realista por defecto
-      locations: [
-        {
-          sourceType: 'News Site',
-          views: 45000,
-          publicationDate: '2025-01-15T09:00:00Z',
-          locationName: 'TechCrunch'
-        },
-        {
-          sourceType: 'Blog',
-          views: 32000,
-          publicationDate: '2025-01-15T10:00:00Z',
-          locationName: 'VentureBeat'
-        },
-        {
-          sourceType: 'Social Media',
-          views: 48000,
-          publicationDate: '2025-01-15T11:00:00Z',
-          locationName: 'LinkedIn'
-        }
-      ]
+      totalViews: 0,
+      thirdPartyLocations: 0,
+      locationFactor: 0,
+      totalScore: 0,
+      scorePercentage: 0, // Sin datos = 0
+      locations: []
     };
   },
 
   /**
    * Calcula el Organic Findability Score basado en:
    * - SERP Score: Posición promedio en Google (serp_index_position)
-   * - PR Topics Coverage: Diversidad de palabras clave en title y snippet
+   * - PR Topics Coverage: Diversidad de palabras clave (serp_search_query)
+   * - Google Trends Proxy: Frecuencia de publicaciones en el tiempo
    */
   async calculateOrganicFindability(accountId: string): Promise<OrganicFindabilityData> {
     try {
-      // Obtener publicaciones de los últimos 30 días
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Obtener publicaciones de los últimos 90 días para análisis de tendencias
+      const now = new Date();
+      const ninetyDaysAgo = new Date(now);
+      ninetyDaysAgo.setDate(now.getDate() - 90);
+      
+      console.log('🔍 Organic Findability Debug: Current date:', now.toISOString());
+      console.log('🔍 Organic Findability Debug: Searching from', ninetyDaysAgo.toISOString(), 'to', now.toISOString());
 
-      // Obtener publication_relationships con datos de SERP y contenido
+      // Obtener publication_relationships con datos de SERP
       const { data: relationships, error: relError } = await supabase
         .from('publication_relationships')
         .select(`
           id,
           publication_id,
           serp_index_position,
-          snippet,
-          title,
+          serp_search_query,
           publication_date,
           publications!publication_relationships_publication_id_fkey (
             id,
@@ -385,7 +395,7 @@ export const prHealthMetricsService = {
           )
         `)
         .eq('account_id', accountId)
-        .gte('publication_date', thirtyDaysAgo.toISOString())
+        .gte('publication_date', ninetyDaysAgo.toISOString())
         .not('serp_index_position', 'is', null)
         .order('publication_date', { ascending: false });
 
@@ -396,55 +406,112 @@ export const prHealthMetricsService = {
 
       if (!relationships || relationships.length === 0) {
         console.log('🔍 Organic Findability Debug: No relationships found for account', accountId);
-        console.log('🔍 Organic Findability Debug: Date range:', thirtyDaysAgo.toISOString(), 'to now');
+        console.log('🔍 Organic Findability Debug: Date range:', ninetyDaysAgo.toISOString(), 'to now');
         return this.getDefaultOrganicFindability();
       }
 
-      console.log('🔍 Organic Findability Debug: Found', relationships.length, 'relationships');
+      console.log('🔍 Organic Findability Debug: Found', relationships.length, 'relationships from publication_relationships');
 
       // Componente 1: SERP Score
       const serpPositions = relationships
         .filter(rel => rel.serp_index_position && rel.serp_index_position > 0)
         .map(rel => rel.serp_index_position!);
 
-      const averageSerpPosition = serpPositions.length > 0 
-        ? serpPositions.reduce((sum, pos) => sum + pos, 0) / serpPositions.length 
-        : 0;
+      let averageSerpPosition = 0;
+      let serpScore = 0;
 
-      // SERP Score = MAX(0, 100 - avg_serp_position)
-      const serpScore = Math.max(0, 100 - averageSerpPosition);
+      if (serpPositions.length > 0) {
+        averageSerpPosition = serpPositions.reduce((sum, pos) => sum + pos, 0) / serpPositions.length;
+        serpScore = Math.max(0, 100 - averageSerpPosition);
+        console.log('🔍 SERP Score Debug: Using real data - positions:', serpPositions, 'avg:', averageSerpPosition, 'score:', serpScore);
+      } else {
+        // Si no hay datos de SERP, usar valor mínimo realista
+        averageSerpPosition = 50; // Posición promedio en el medio
+        serpScore = 50; // Score neutral
+        console.log('🔍 SERP Score Debug: No data, using default - avg:', averageSerpPosition, 'score:', serpScore);
+      }
 
       // Agrupar por publicación original para análisis de SERP
       const serpDetails = this.groupSerpDetailsByPublication(relationships);
 
-      // Componente 2: PR Topics Coverage
-      const allText = relationships
-        .filter(rel => rel.title || rel.snippet)
-        .map(rel => `${rel.title || ''} ${rel.snippet || ''}`)
-        .join(' ');
+      // Componente 2: PR Topics Coverage (usando serp_search_query)
+      const searchQueries = relationships
+        .filter(rel => rel.serp_search_query)
+        .map(rel => rel.serp_search_query!)
+        .filter(query => query.trim().length > 0);
 
-      const keywords = this.extractKeywords(allText);
-      const prTopicsCoverage = keywords.length;
+      const uniqueSearchQueries = [...new Set(searchQueries)];
+      let prTopicsCoverage = uniqueSearchQueries.length;
 
-      // Calcular frecuencia de palabras clave
-      const keywordFrequency = this.calculateKeywordFrequency(allText);
-      const topicDetails = Object.entries(keywordFrequency)
-        .map(([keyword, frequency]) => ({ keyword, frequency }))
+      // Si no hay queries de búsqueda, usar valor mínimo realista
+      if (prTopicsCoverage === 0) {
+        prTopicsCoverage = 5; // Mínimo de 5 temas básicos
+        console.log('🔍 PR Topics Debug: No search queries found, using default:', prTopicsCoverage);
+      } else {
+        console.log('🔍 PR Topics Debug: Found', prTopicsCoverage, 'unique search queries:', uniqueSearchQueries.slice(0, 5));
+      }
+
+      // Calcular frecuencia de queries de búsqueda
+      const queryFrequency = this.calculateQueryFrequency(searchQueries);
+      const topicDetails = Object.entries(queryFrequency)
+        .map(([query, frequency]) => ({ keyword: query, frequency }))
         .sort((a, b) => b.frequency - a.frequency)
-        .slice(0, 20); // Top 20 keywords
+        .slice(0, 20); // Top 20 search queries
 
-      // Organic Findability Score = (SERP_Score * 0.5) + (PR_Topics_Coverage * 0.5)
-      const totalScore = (serpScore * 0.5) + (prTopicsCoverage * 0.5);
+      // Componente 3: Google Trends Proxy (frecuencia de publicaciones en el tiempo)
+      // Usar la tabla publications, NO publication_relationships
+      let trendsScore = 50; // Inicializar con valor neutral por defecto
+      
+      const { data: publications, error: pubError } = await supabase
+        .from('publications')
+        .select('id, publication_date')
+        .eq('account_id', accountId)
+        .gte('publication_date', ninetyDaysAgo.toISOString())
+        .not('publication_date', 'is', null)
+        .order('publication_date', { ascending: true });
+
+      if (pubError) {
+        console.error('Error fetching publications for trends analysis:', pubError);
+        trendsScore = 50; // Score neutral en caso de error
+      } else if (!publications || publications.length === 0) {
+        trendsScore = 50; // Score neutral si no hay publicaciones
+        console.log('🔍 Organic Findability Debug: No publications found for trends analysis');
+      } else {
+        console.log('🔍 Organic Findability Debug: Found', publications.length, 'publications from publications table for trends');
+        const publicationDates = publications
+          .map(pub => new Date(pub.publication_date))
+          .sort((a, b) => a.getTime() - b.getTime());
+
+        trendsScore = this.calculateTrendsScore(publicationDates);
+      }
+
+      // Si no hay datos de tendencias, usar valor mínimo realista
+      if (trendsScore === 0) {
+        trendsScore = 50; // Score neutral
+      }
+
+      // Organic Findability Score = Promedio de las 3 métricas
+      const totalScore = (serpScore + trendsScore + (prTopicsCoverage * 2)) / 3; // PR Topics se multiplica por 2 para balance
 
       // Convertir a porcentaje
-      // SERP Score ya está en 0-100, PR Topics Coverage se normaliza
-      // Asumiendo que 50+ keywords es excelente
-      const normalizedTopicsCoverage = Math.min(100, (prTopicsCoverage / 50) * 100);
-      const scorePercentage = Math.round((serpScore * 0.5) + (normalizedTopicsCoverage * 0.5));
+      // SERP Score ya está en 0-100, Trends Score ya está en 0-100
+      // PR Topics Coverage se normaliza (asumiendo que 30+ queries únicas es excelente)
+      const normalizedTopicsCoverage = Math.min(100, (prTopicsCoverage / 30) * 100);
+      const scorePercentage = Math.round((serpScore + trendsScore + normalizedTopicsCoverage) / 3);
+
+      console.log('🔍 Organic Findability Debug - Score Calculation:', {
+        serpScore,
+        prTopicsCoverage,
+        trendsScore,
+        normalizedTopicsCoverage,
+        scorePercentage,
+        totalScore
+      });
 
       return {
         serpScore: Math.round(serpScore * 100) / 100,
         prTopicsCoverage,
+        trendsScore: Math.round(trendsScore * 100) / 100,
         averageSerpPosition: Math.round(averageSerpPosition * 100) / 100,
         totalKeywords: prTopicsCoverage,
         totalScore: Math.round(totalScore * 100) / 100,
@@ -511,57 +578,281 @@ export const prHealthMetricsService = {
   },
 
   /**
-   * Calcula la frecuencia de palabras clave
+   * Calcula la frecuencia de queries de búsqueda
    */
-  calculateKeywordFrequency(text: string): Record<string, number> {
-    const keywords = this.extractKeywords(text);
+  calculateQueryFrequency(queries: string[]): Record<string, number> {
     const frequency: Record<string, number> = {};
 
-    const words = text.toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .split(' ');
-
-    words.forEach(word => {
-      if (keywords.includes(word)) {
-        frequency[word] = (frequency[word] || 0) + 1;
-      }
+    queries.forEach(query => {
+      frequency[query] = (frequency[query] || 0) + 1;
     });
 
     return frequency;
   },
 
   /**
+   * Calcula el Google Trends Proxy basado en la frecuencia de publicaciones en el tiempo
+   */
+  calculateTrendsScore(publicationDates: Date[]): number {
+    if (publicationDates.length < 2) return 50; // Score neutral si no hay suficientes datos
+
+    // Agrupar publicaciones por semana para detectar tendencias
+    const weeklyGroups: Record<string, number> = {};
+    
+    publicationDates.forEach(date => {
+      const weekKey = this.getWeekKey(date);
+      weeklyGroups[weekKey] = (weeklyGroups[weekKey] || 0) + 1;
+    });
+
+    const weeks = Object.keys(weeklyGroups).sort();
+    if (weeks.length < 2) return 50;
+
+    // Calcular tendencia: si la frecuencia aumenta en el tiempo = score alto
+    const firstHalf = weeks.slice(0, Math.ceil(weeks.length / 2));
+    const secondHalf = weeks.slice(Math.ceil(weeks.length / 2));
+
+    const firstHalfAvg = firstHalf.reduce((sum, week) => sum + weeklyGroups[week], 0) / firstHalf.length;
+    const secondHalfAvg = secondHalf.reduce((sum, week) => sum + weeklyGroups[week], 0) / secondHalf.length;
+
+    // Calcular score basado en la tendencia
+    let trendsScore = 50; // Score neutral
+
+    if (secondHalfAvg > firstHalfAvg) {
+      // Tendencia creciente = score alto
+      const growthRate = (secondHalfAvg - firstHalfAvg) / firstHalfAvg;
+      trendsScore = Math.min(100, 50 + (growthRate * 50));
+    } else if (secondHalfAvg < firstHalfAvg) {
+      // Tendencia decreciente = score bajo
+      const declineRate = (firstHalfAvg - secondHalfAvg) / firstHalfAvg;
+      trendsScore = Math.max(0, 50 - (declineRate * 50));
+    }
+
+    return Math.round(trendsScore);
+  },
+
+  /**
+   * Genera una clave única para cada semana
+   */
+  getWeekKey(date: Date): string {
+    const year = date.getFullYear();
+    const week = Math.ceil((date.getTime() - new Date(year, 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return `${year}-W${week.toString().padStart(2, '0')}`;
+  },
+
+  /**
    * Retorna valores por defecto para Organic Findability
    */
   getDefaultOrganicFindability(): OrganicFindabilityData {
+    console.log('🔍 Organic Findability Debug - Using default values');
     return {
-      serpScore: 92,
-      prTopicsCoverage: 45,
-      averageSerpPosition: 8,
-      totalKeywords: 45,
-      totalScore: 68.5,
-      scorePercentage: 90, // Score realista por defecto
+      serpScore: 50, // Score neutral (posición promedio en el medio)
+      prTopicsCoverage: 5, // Mínimo de temas básicos
+      trendsScore: 50, // Score neutral (sin tendencia clara)
+      averageSerpPosition: 50, // Posición promedio en el medio
+      totalKeywords: 5, // Mínimo de keywords
+      totalScore: 35, // (50 + 50 + 5*2) / 3 = 35
+      scorePercentage: 35, // Score mínimo pero realista
       serpDetails: [
         {
           publicationId: 'pub-1',
-          averagePosition: 5,
-          mentionsCount: 3
-        },
-        {
-          publicationId: 'pub-2',
-          averagePosition: 12,
-          mentionsCount: 2
+          averagePosition: 50,
+          mentionsCount: 1
         }
       ],
       topicDetails: [
-        { keyword: 'innovation', frequency: 8 },
-        { keyword: 'technology', frequency: 6 },
-        { keyword: 'growth', frequency: 5 },
-        { keyword: 'market', frequency: 4 },
-        { keyword: 'strategy', frequency: 3 }
+        { keyword: 'general', frequency: 1 },
+        { keyword: 'basic', frequency: 1 },
+        { keyword: 'standard', frequency: 1 }
       ]
+    };
+  },
+
+  /**
+   * Calcula el Pick-Up Quality basado en la efectividad de recolecciones de terceros
+   */
+  async calculatePickUpQuality(accountId: string): Promise<PickUpQualityData> {
+    console.log('🎯 Pick-Up Quality Debug: Starting calculation for account:', accountId);
+    
+    try {
+      // Obtener publicaciones del account
+      const { data: publications, error: pubError } = await supabase
+        .from('publications')
+        .select('id, publication_date')
+        .eq('account_id', accountId)
+        .gte('publication_date', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()) // Último año
+        .order('publication_date', { ascending: false });
+
+      if (pubError) {
+        console.error('🎯 Pick-Up Quality Debug: Error fetching publications:', pubError);
+        return this.getDefaultPickUpQuality();
+      }
+
+      if (!publications || publications.length === 0) {
+        console.log('🎯 Pick-Up Quality Debug: No publications found for account');
+        return this.getDefaultPickUpQuality();
+      }
+
+      console.log('🎯 Pick-Up Quality Debug: Found', publications.length, 'publications');
+
+      let totalPickUpQuality = 0;
+      let publicationsWithPickups = 0;
+      const pickUpDetails: Array<{
+        publicationId: string;
+        pickUpScore: number;
+        thirdPartyCount: number;
+        totalAudience: number;
+        averageFit: number;
+      }> = [];
+
+      // Para cada publicación, calcular su Pick-Up Quality
+      for (const publication of publications) {
+        const { data: relationships, error: relError } = await supabase
+          .from('publication_relationships')
+          .select('id, source, relationship_type, views')
+          .eq('publication_id', publication.id)
+          .in('relationship_type', ['associated', 'syndicated', 'pickup']);
+
+        if (relError) {
+          console.error('🎯 Pick-Up Quality Debug: Error fetching relationships for publication:', publication.id, relError);
+          continue;
+        }
+
+        if (!relationships || relationships.length === 0) {
+          continue; // No hay recolecciones de terceros para esta publicación
+        }
+
+        let publicationPickUpScore = 0;
+        let totalAudience = 0;
+        let totalFit = 0;
+
+        // Calcular score para cada recolección de terceros
+        for (const relationship of relationships) {
+          const audienceSize = this.getAudienceSize(relationship.source);
+          const fitFactor = this.getBrandAudienceFit(relationship.source);
+          
+          const pickUpContribution = audienceSize * fitFactor;
+          publicationPickUpScore += pickUpContribution;
+          totalAudience += audienceSize;
+          totalFit += fitFactor;
+        }
+
+        if (publicationPickUpScore > 0) {
+          totalPickUpQuality += publicationPickUpScore;
+          publicationsWithPickups++;
+          
+          pickUpDetails.push({
+            publicationId: publication.id,
+            pickUpScore: publicationPickUpScore,
+            thirdPartyCount: relationships.length,
+            totalAudience: totalAudience,
+            averageFit: totalFit / relationships.length
+          });
+        }
+      }
+
+      if (publicationsWithPickups === 0) {
+        console.log('🎯 Pick-Up Quality Debug: No third-party pickups found');
+        return this.getDefaultPickUpQuality();
+      }
+
+      // Calcular score promedio por publicación
+      const averagePickUpQuality = totalPickUpQuality / publicationsWithPickups;
+      
+      // Normalizar a escala 0-100
+      const normalizedScore = this.normalizePickUpQualityScore(averagePickUpQuality);
+      
+      const result: PickUpQualityData = {
+        accountId,
+        averagePickUpQuality,
+        totalPickUpQuality,
+        publicationsWithPickups,
+        totalPublications: publications.length,
+        normalizedScore,
+        scorePercentage: Math.round(normalizedScore),
+        pickUpDetails,
+        calculationDate: new Date().toISOString()
+      };
+
+      console.log('🎯 Pick-Up Quality Debug: Final calculation:', {
+        averagePickUpQuality: result.averagePickUpQuality.toLocaleString(),
+        normalizedScore: result.normalizedScore,
+        publicationsWithPickups: result.publicationsWithPickups,
+        totalPublications: result.totalPublications
+      });
+
+      return result;
+
+    } catch (error) {
+      console.error('🎯 Pick-Up Quality Debug: Unexpected error:', error);
+      return this.getDefaultPickUpQuality();
+    }
+  },
+
+  /**
+   * Obtiene el tamaño de audiencia proxy para un dominio
+   */
+  getAudienceSize(source: string): number {
+    const domain = source.toLowerCase();
+    
+    // Mapeo de tipos de sitio a audiencia proxy
+    if (domain.includes('forbes.com') || domain.includes('reuters.com') || domain.includes('bloomberg.com')) {
+      return 1000000; // National News - 1M
+    } else if (domain.includes('techcrunch.com') || domain.includes('venturebeat.com') || domain.includes('wired.com')) {
+      return 500000; // Sector Blog - 500K
+    } else if (domain.includes('medium.com') || domain.includes('substack.com')) {
+      return 100000; // Medium Blog - 100K
+    } else if (domain.includes('local') || domain.includes('directory')) {
+      return 10000; // Local Directory - 10K
+    } else {
+      return 50000; // Default - 50K
+    }
+  },
+
+  /**
+   * Obtiene el factor de relevancia marca-audiencia para un dominio
+   */
+  getBrandAudienceFit(source: string): number {
+    const domain = source.toLowerCase();
+    
+    // Mapeo de relevancia basado en el tipo de sitio
+    if (domain.includes('forbes.com') || domain.includes('reuters.com') || domain.includes('bloomberg.com')) {
+      return 1.0; // Highly relevant news
+    } else if (domain.includes('techcrunch.com') || domain.includes('venturebeat.com')) {
+      return 0.8; // Highly relevant sector
+    } else if (domain.includes('medium.com') || domain.includes('substack.com')) {
+      return 0.6; // Moderately relevant
+    } else if (domain.includes('local') || domain.includes('directory')) {
+      return 0.3; // Low relevance
+    } else {
+      return 0.5; // Default moderate relevance
+    }
+  },
+
+  /**
+   * Normaliza el score de Pick-Up Quality a escala 0-100
+   */
+  normalizePickUpQualityScore(score: number): number {
+    // Escala logarítmica para manejar rangos grandes
+    const logScore = Math.log10(score + 1);
+    const maxLogScore = Math.log10(10000000 + 1); // 10M como máximo
+    return Math.min(100, (logScore / maxLogScore) * 100);
+  },
+
+  /**
+   * Retorna valores por defecto para Pick-Up Quality
+   */
+  getDefaultPickUpQuality(): PickUpQualityData {
+    console.log('🎯 Pick-Up Quality Debug - Using default values');
+    return {
+      accountId: '',
+      averagePickUpQuality: 0,
+      totalPickUpQuality: 0,
+      publicationsWithPickups: 0,
+      totalPublications: 0,
+      normalizedScore: 0,
+      scorePercentage: 0,
+      pickUpDetails: [],
+      calculationDate: new Date().toISOString()
     };
   },
 
@@ -572,12 +863,13 @@ export const prHealthMetricsService = {
     const publishingVelocity = await this.calculatePublishingVelocity(accountId);
     const distributionReach = await this.calculateDistributionReach(accountId);
     const organicFindability = await this.calculateOrganicFindability(accountId);
+    const pickUpQuality = await this.calculatePickUpQuality(accountId);
 
     return {
       publishingVelocity,
       distributionReach,
       organicFindability,
-      // Futuras métricas se agregarán aquí
+      pickUpQuality
     };
   }
 };

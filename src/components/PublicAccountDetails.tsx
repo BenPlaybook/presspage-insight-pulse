@@ -262,13 +262,37 @@ const PublicAccountDetails = () => {
              aiSummary={account?.ai_performance_summary}
              customerAiSummary={account?.customer_ai_summary}
              prHealthData={{
-               overallScore: 92,
+               overallScore: (() => {
+                 // Calcular score global basado en métricas reales
+                 const scores = [
+                   prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
+                   prHealthMetrics?.distributionReach?.scorePercentage || 0,
+                   prHealthMetrics?.organicFindability?.scorePercentage || 0,
+                   prHealthMetrics?.pickUpQuality?.scorePercentage || 0
+                 ];
+                 
+                 // Filtrar scores válidos (mayores a 0)
+                 const validScores = scores.filter(score => score > 0);
+                 
+                 if (validScores.length === 0) return 0;
+                 
+                 // Calcular promedio de métricas disponibles
+                 const averageScore = validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+                 
+                 console.log('🎯 Overall Score Calculation:', {
+                   individualScores: scores,
+                   validScores,
+                   averageScore: Math.round(averageScore)
+                 });
+                 
+                 return Math.round(averageScore);
+               })(),
                metrics: {
-                 publishingVelocity: prHealthMetrics?.publishingVelocity?.scorePercentage || 88,
-                 distributionReach: prHealthMetrics?.distributionReach?.scorePercentage || 95,
-                 pickupQuality: 85,
-                 organicFindability: prHealthMetrics?.organicFindability?.scorePercentage || 90,
-                 competitorBenchmark: 89
+                 publishingVelocity: prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
+                 distributionReach: prHealthMetrics?.distributionReach?.scorePercentage || 0,
+                 pickupQuality: prHealthMetrics?.pickUpQuality?.scorePercentage || 0,
+                 organicFindability: prHealthMetrics?.organicFindability?.scorePercentage || 0,
+                 competitorBenchmark: 0
                },
                recommendation: (() => {
                  // Si tenemos datos reales, construir recomendación detallada
@@ -291,11 +315,26 @@ const PublicAccountDetails = () => {
                    const pvScore = prHealthMetrics?.publishingVelocity?.scorePercentage || 0;
                    const drScore = prHealthMetrics?.distributionReach?.scorePercentage || 0;
                    const ofScore = prHealthMetrics?.organicFindability?.scorePercentage || 0;
+                   const puqScore = prHealthMetrics?.pickUpQuality?.scorePercentage || 0;
                    
-                   if (pvScore >= 80 && drScore >= 80 && ofScore >= 80) {
+                   // Calcular score promedio para la recomendación
+                   const scores = [pvScore, drScore, ofScore, puqScore];
+                   const validScores = scores.filter(score => score > 0);
+                   const averageScore = validScores.length > 0 ? validScores.reduce((sum, score) => sum + score, 0) / validScores.length : 0;
+                   
+                   console.log('🎯 Recommendation Calculation:', {
+                     scores: { pvScore, drScore, ofScore, puqScore },
+                     averageScore: Math.round(averageScore)
+                   });
+                   
+                   if (averageScore >= 80) {
                      parts.push('Excellent performance across all metrics.');
+                   } else if (averageScore >= 60) {
+                     parts.push('Good performance with room for improvement.');
+                   } else if (averageScore >= 40) {
+                     parts.push('Moderate performance. Focus on improving key areas.');
                    } else {
-                     parts.push('Consider optimizing your PR strategy.');
+                     parts.push('Poor Performance. Consider optimizing your PR strategy.');
                    }
                    
                    return parts.join('\n\n');
