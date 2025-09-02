@@ -222,7 +222,31 @@ const PublicAccountDetails = () => {
            url={account.main_website_url || "https://vinted.com"}
            status="Active"
            lastAnalyzed="Coming Soon"
-           healthScore={92}
+                       healthScore={(() => {
+              // Calcular score global basado en métricas reales
+              const scores = [
+                prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
+                prHealthMetrics?.distributionReach?.scorePercentage || 0,
+                prHealthMetrics?.organicFindability?.scorePercentage || 0,
+                prHealthMetrics?.pickUpQuality?.scorePercentage || 0
+              ];
+              
+              // Filtrar scores válidos (mayores a 0)
+              const validScores = scores.filter(score => score > 0);
+              
+              if (validScores.length === 0) return 0;
+              
+              // Calcular promedio de métricas disponibles
+              const averageScore = validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+              
+              console.log('🎯 Header Health Score Calculation:', {
+                individualScores: scores,
+                validScores,
+                averageScore: Math.round(averageScore)
+              });
+              
+              return Math.round(averageScore);
+            })()}
            disableInteractions={!user} // Disable interactions for non-authenticated users
          />
         
