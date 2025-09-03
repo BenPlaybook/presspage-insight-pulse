@@ -64,6 +64,56 @@ export const databaseService = {
     };
   },
 
+  /**
+   * Obtiene TODAS las cuentas sin paginación (para benchmark)
+   */
+  async getAllAccounts(): Promise<{ data: Account[] | null; error: any; total: number }> {
+    try {
+      console.log('🎯 Loading ALL accounts without pagination...');
+      
+      const { data, error, count } = await supabase
+        .from('accounts')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      const total = count || 0;
+      console.log('🎯 Total accounts found:', total);
+
+      if (error) {
+        console.error('Error loading all accounts:', error);
+        return { data: null, error, total: 0 };
+      }
+
+      return { data: data || [], error: null, total };
+    } catch (error) {
+      console.error('Error loading all accounts:', error);
+      return { data: null, error, total: 0 };
+    }
+  },
+
+  /**
+   * Busca cuentas por dominio
+   */
+  async findAccountsByDomain(domain: string): Promise<{ data: Account[] | null; error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .or(`main_website_url.ilike.%${domain}%,name.ilike.%${domain}%`)
+        .limit(10);
+
+      if (error) {
+        console.error('Error searching accounts by domain:', error);
+        return { data: null, error };
+      }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error searching accounts by domain:', error);
+      return { data: null, error };
+    }
+  },
+
   async getAccountById(id: string): Promise<{ data: Account | null; error: any }> {
     const { data, error } = await supabase
       .from('accounts')

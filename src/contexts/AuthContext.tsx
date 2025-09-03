@@ -10,6 +10,7 @@ interface AuthContextType {
     full_access: boolean;
     name?: string;
     email: string;
+    domain?: string;
     created_at: string;
   } | null;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;

@@ -2,6 +2,29 @@ import { useState, useEffect } from 'react'
 import { User as AuthUser, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
+// Función para extraer el dominio del email o URL
+const extractDomainFromEmail = (email: string): string => {
+  if (!email) return '';
+  
+  // Si es un email normal (ej: juan@hotmail.com)
+  if (email.includes('@') && !email.includes('http')) {
+    const parts = email.split('@');
+    if (parts.length === 2) {
+      return parts[1].toLowerCase();
+    }
+  }
+  
+  // Si es un email con URL (ej: juan@https://supabase.com/)
+  if (email.includes('@https://') || email.includes('@http://')) {
+    const urlMatch = email.match(/@(https?:\/\/[^\/]+)/);
+    if (urlMatch) {
+      return urlMatch[1].replace(/^https?:\/\//, '').toLowerCase();
+    }
+  }
+  
+  return '';
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -10,6 +33,7 @@ export const useAuth = () => {
     full_access: boolean;
     name?: string;
     email: string;
+    domain?: string;
     created_at: string;
   } | null>(null)
 
@@ -18,7 +42,7 @@ export const useAuth = () => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('full_access, name, email, created_at')
+        .select('full_access, name, email, domain, created_at')
         .eq('id', userId)
         .single()
       
@@ -28,6 +52,7 @@ export const useAuth = () => {
         return { 
           full_access: false,
           email: user?.email || '',
+          domain: user?.email ? extractDomainFromEmail(user.email) : undefined,
           created_at: new Date().toISOString()
         }
       }
@@ -35,6 +60,7 @@ export const useAuth = () => {
       return data || { 
         full_access: false,
         email: user?.email || '',
+        domain: user?.email ? extractDomainFromEmail(user.email) : undefined,
         created_at: new Date().toISOString()
       }
     } catch (error) {
@@ -64,11 +90,12 @@ export const useAuth = () => {
           getUserProfile(session.user.id).then(profile => {
             setUserProfile(profile)
           }).catch(() => {
-            setUserProfile({ 
-              full_access: false,
-              email: session.user.email || '',
-              created_at: new Date().toISOString()
-            })
+                      setUserProfile({ 
+            full_access: false,
+            email: session.user.email || '',
+            domain: session.user.email ? extractDomainFromEmail(session.user.email) : undefined,
+            created_at: new Date().toISOString()
+          })
           })
         }
       } catch (error) {

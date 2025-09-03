@@ -11,6 +11,7 @@ import { databaseService } from '@/services/databaseService';
 import { sendIntakeAccountData, webhookService } from '@/services/webhookService';
 import { supabase } from '@/lib/supabase';
 import { Account as DatabaseAccount } from '@/types/database';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface BenchmarkConfigModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
   onClose,
   onStartBenchmark
 }) => {
+  const { userProfile } = useAuthContext();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [championId, setChampionId] = useState<string>('');
   const [competitors, setCompetitors] = useState<Array<{
@@ -54,24 +56,113 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [competitorSearchTerm, setCompetitorSearchTerm] = useState('');
+  const [autoPopulatedChampion, setAutoPopulatedChampion] = useState<Account | null>(null);
 
-  // Load existing accounts
+  // Load accounts and auto-populate champion in parallel
   useEffect(() => {
-    const loadAccounts = async () => {
+    if (!isOpen) return; // Solo ejecutar cuando el modal esté abierto
+    
+    const loadAccountsAndChampion = async () => {
       try {
-        const { data, error } = await databaseService.getAccounts(1, 100);
-        if (!error && data) {
-          setAccounts(data);
+        console.log('🎯 Starting parallel load: accounts + champion search');
+        
+        // 1. Buscar champion específico por dominio (rápido)
+        if (userProfile?.domain && !championId) {
+          console.log('🎯 Searching for champion by domain:', userProfile.domain);
+          const { data: championAccounts, error: championError } = await databaseService.findAccountsByDomain(userProfile.domain);
+          
+          if (!championError && championAccounts && championAccounts.length > 0) {
+            const championAccount = championAccounts[0];
+            console.log('🎯 Champion found immediately:', championAccount.name);
+            console.log('🎯 Champion account details:', {
+              id: championAccount.id,
+              name: championAccount.name,
+              url: championAccount.main_website_url
+            });
+            
+            setChampionId(championAccount.id);
+            setAutoPopulatedChampion(championAccount);
+            
+            // Agregar la cuenta del champion a la lista de accounts para que esté disponible en el dropdown
+            setAccounts(prev => {
+              const exists = prev.some(acc => acc.id === championAccount.id);
+              if (!exists) {
+                console.log('🎯 Adding champion account to accounts list for dropdown');
+                return [...prev, championAccount];
+              }
+              return prev;
+            });
+          } else if (!championError && userProfile.domain) {
+            // Crear nueva cuenta si no existe
+            console.log('🎯 Creating new champion account for domain:', userProfile.domain);
+            const newAccount = {
+              name: userProfile.domain.charAt(0).toUpperCase() + userProfile.domain.slice(1),
+              main_website_url: `https://${userProfile.domain}`,
+              is_actively_tracked: false,
+              industry: 'Technology'
+            };
+            
+            const { data: createdAccount, error: createError } = await databaseService.createAccount(newAccount);
+            if (!createError && createdAccount) {
+              setChampionId(createdAccount.id);
+              setAutoPopulatedChampion(createdAccount);
+              
+              // Agregar la nueva cuenta del champion a la lista de accounts
+              setAccounts(prev => {
+                const exists = prev.some(acc => acc.id === createdAccount.id);
+                if (!exists) {
+                  console.log('🎯 Adding new champion account to accounts list for dropdown');
+                  return [...prev, createdAccount];
+                }
+                return prev;
+              });
+              
+              console.log('🎯 New champion account created:', createdAccount.name);
+            }
+          }
         }
+        
+        // 2. Cargar TODAS las cuentas sin paginación (para el dropdown)
+        console.log('🎯 Loading ALL accounts for dropdown (no pagination)...');
+        const { data: allAccounts, error: accountsError, total: totalAccounts } = await databaseService.getAllAccounts();
+        if (!accountsError && allAccounts) {
+          console.log('🎯 Successfully loaded', allAccounts.length, 'accounts out of', totalAccounts, 'total');
+          
+          setAccounts(prev => {
+            // Combinar cuentas existentes (incluyendo champion) con TODAS las cuentas
+            const combined = [...prev, ...allAccounts];
+            const unique = combined.filter((acc, index, self) => 
+              index === self.findIndex(a => a.id === acc.id)
+            );
+            console.log('🎯 Combined accounts (champion + ALL):', unique.length, 'accounts out of', totalAccounts, 'total');
+            return unique;
+          });
+        } else {
+          console.error('🎯 Error loading all accounts:', accountsError);
+        }
+        
       } catch (error) {
-        console.error('Error loading accounts:', error);
+        console.error('Error in parallel load:', error);
       }
     };
 
-    if (isOpen) {
-      loadAccounts();
+    loadAccountsAndChampion();
+  }, [isOpen, userProfile?.domain, championId]);
+
+  // Monitor championId changes ONLY when modal is open
+  useEffect(() => {
+    if (!isOpen) return; // Solo ejecutar cuando el modal esté abierto
+    
+    console.log('🎯 championId changed to:', championId);
+    if (championId) {
+      const found = accounts.find(acc => acc.id === championId);
+      console.log('🎯 Found account for championId:', found?.name || 'NOT FOUND');
+      console.log('🎯 Available accounts:', accounts.map(acc => ({ id: acc.id, name: acc.name })));
+      console.log('🎯 Looking for championId:', championId);
     }
-  }, [isOpen]);
+  }, [championId, accounts, isOpen]);
+
+
 
   // Validate domain format
   const validateDomain = (domain: string): boolean => {
@@ -361,6 +452,19 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
   });
 
   const selectedChampion = accounts.find(acc => acc.id === championId);
+  
+  // Debug logs para el champion selection
+  console.log('🎯 Champion Selection Debug:', {
+    championId,
+    selectedChampion: selectedChampion?.name,
+    selectedChampionId: selectedChampion?.id,
+    autoPopulatedChampion: autoPopulatedChampion?.name,
+    autoPopulatedChampionId: autoPopulatedChampion?.id,
+    accountsCount: accounts.length,
+    filteredAccountsCount: filteredAccounts.length,
+    accounts: accounts.map(acc => ({ id: acc.id, name: acc.name })),
+    isChampionIdInAccounts: accounts.some(acc => acc.id === championId)
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -406,31 +510,79 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
               )}
             </div>
             
-            <Select value={championId} onValueChange={setChampionId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose the company to benchmark against" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredAccounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{account.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {account.main_website_url || 'No website'}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Select value={championId} onValueChange={setChampionId}>
+                <SelectTrigger className={`w-full ${
+                  championId ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                }`}>
+                  <SelectValue 
+                    placeholder={
+                      championId 
+                        ? `Selected: ${selectedChampion?.name || 'Unknown'}` 
+                        : "Choose the company to benchmark against"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{account.name}</span>
+                        <span className="text-xs text-gray-500">
+                          {account.main_website_url || 'No website'}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Status indicator */}
+              {championId && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className={`w-2 h-2 rounded-full ${
+                    autoPopulatedChampion?.id === championId ? 'bg-green-500' : 'bg-blue-500'
+                  }`} />
+                  <span className="text-gray-600">
+                    {autoPopulatedChampion?.id === championId ? 'Auto-selected' : 'Manually selected'}
+                  </span>
+                </div>
+              )}
+            </div>
             {selectedChampion && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Champion:</strong> {selectedChampion.name}
-                </p>
-                {selectedChampion.main_website_url && (
-                  <p className="text-sm text-blue-700">
-                    <strong>Website:</strong> {selectedChampion.main_website_url}
+              <div className={`p-3 rounded-lg ${
+                autoPopulatedChampion?.id === selectedChampion.id 
+                  ? 'bg-green-50 border border-green-200' 
+                  : 'bg-blue-50'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-sm ${
+                      autoPopulatedChampion?.id === selectedChampion.id 
+                        ? 'text-green-800' 
+                        : 'text-blue-800'
+                    }`}>
+                      <strong>Champion:</strong> {selectedChampion.name}
+                    </p>
+                    {selectedChampion.main_website_url && (
+                      <p className={`text-sm ${
+                        autoPopulatedChampion?.id === selectedChampion.id 
+                          ? 'text-green-700' 
+                          : 'text-blue-700'
+                      }`}>
+                        <strong>Website:</strong> {selectedChampion.main_website_url}
+                      </p>
+                    )}
+                  </div>
+                  {autoPopulatedChampion?.id === selectedChampion.id && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300">
+                      Auto-selected
+                    </Badge>
+                  )}
+                </div>
+                {autoPopulatedChampion?.id === selectedChampion.id && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Based on your company domain: <strong>{userProfile?.domain}</strong>
                   </p>
                 )}
               </div>
