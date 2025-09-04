@@ -3,14 +3,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { UnlockFeaturesModal } from '@/components/UnlockFeaturesModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { Building2 } from 'lucide-react';
 
 interface AccountHeaderProps {
   name: string;
   url: string;
   status: string;
   lastAnalyzed: string;
+  industry?: string;
   healthScore?: number;
   showUnlockModal?: boolean;
   onRunAnalysis?: () => void;
@@ -22,6 +24,7 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
   url,
   status,
   lastAnalyzed,
+  industry,
   healthScore,
   showUnlockModal = false,
   onRunAnalysis,
@@ -29,16 +32,13 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
 }) => {
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
 
   const handleRunAnalysis = () => {
-    if (user) {
-      // Usuario autenticado - ir a benchmark
-      navigate('/benchmark');
-    } else {
-      // Usuario no autenticado - mostrar modal
-      setShowModal(true);
-    }
+    // Preserve current URL parameters when navigating to benchmark
+    const benchmarkUrl = searchParams.toString() ? `/benchmark?${searchParams.toString()}` : '/benchmark';
+    navigate(benchmarkUrl);
   };
 
   const handleContactSales = () => {
@@ -62,7 +62,26 @@ export const AccountHeader: React.FC<AccountHeaderProps> = ({
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold text-[#122F4A]">{name}</h1>
-            <p className="text-sm text-gray-500">{url} • {status} • Last analyzed: {lastAnalyzed}</p>
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <span>{url}</span>
+              <span>•</span>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {status}
+              </span>
+              {industry && industry.trim() !== '' && industry !== 'N/A' && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <Building2 className="w-3 h-3" />
+                    {industry}
+                  </span>
+                </>
+              )}
+              <span>•</span>
+              <span>Last analyzed: {lastAnalyzed}</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             {healthScore !== undefined && (

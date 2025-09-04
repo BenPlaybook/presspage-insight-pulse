@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, AlertCircle } from 'lucide-react';
+import { X, Plus, AlertCircle, HelpCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { databaseService } from '@/services/databaseService';
 import { sendIntakeAccountData, webhookService } from '@/services/webhookService';
+import { clayService } from '@/services/clayService';
 import { supabase } from '@/lib/supabase';
 import { Account as DatabaseAccount } from '@/types/database';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -34,7 +36,31 @@ interface Account {
   id: string;
   name: string;
   main_website_url: string;
+  industry?: string;
 }
+
+// Componente helper para tooltips con icono de información
+const InfoTooltip: React.FC<{ content: string; children: React.ReactNode }> = ({ content, children }) => (
+  <Tooltip delayDuration={300}>
+    <TooltipTrigger asChild>
+      <div className="inline-flex items-center gap-1">
+        {children}
+        <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
+      </div>
+    </TooltipTrigger>
+    <TooltipContent 
+      className="max-w-xs z-[9999] bg-white border border-gray-200 shadow-lg"
+      side="top"
+      align="start"
+      sideOffset={8}
+      avoidCollisions={true}
+      collisionPadding={20}
+      sticky="always"
+    >
+      <p className="text-sm text-gray-700 leading-relaxed">{content}</p>
+    </TooltipContent>
+  </Tooltip>
+);
 
 export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
   isOpen,
@@ -57,110 +83,195 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [competitorSearchTerm, setCompetitorSearchTerm] = useState('');
   const [autoPopulatedChampion, setAutoPopulatedChampion] = useState<Account | null>(null);
+  const [claySuggestions, setClaySuggestions] = useState<any[]>([]);
+  const [clayLoading, setClayLoading] = useState(false);
+
+  // Función para obtener sugerencias de Clay
+  const getClaySuggestions = async (domain: string, companyName: string) => {
+    if (!domain) return;
+    
+    console.log('🎯 Getting competitor suggestions from Clay for domain:', domain, 'and company:', companyName);
+    setClayLoading(true);
+    try {
+      const clayResponse = await clayService.getCompetitorsByDomainAndCompany(domain, companyName);
+      if (clayResponse.success) {
+        console.log('🎯 Clay suggestions received:', clayResponse.data);
+        setClaySuggestions(clayResponse.data || []);
+        // TODO: Procesar las sugerencias de Clay y agregarlas como competitors sugeridos
+      } else {
+        console.warn('🎯 Clay API error:', clayResponse.error);
+        setClaySuggestions([]);
+      }
+    } catch (error) {
+      console.error('🎯 Error calling Clay API:', error);
+      setClaySuggestions([]);
+    } finally {
+      setClayLoading(false);
+    }
+  };
+
+  // Función para auto-preseleccionar competitors por industry
+  const autoSelectCompetitorsByIndustry = (championAccount: Account) => {
+    console.log('🎯 Auto-selecting competitors by industry for champion:', championAccount.name);
+    
+    // Obtener la industria del champion (necesitamos cargar los datos completos)
+    const championWithIndustry = accounts.find(acc => acc.id === championAccount.id);
+    if (!championWithIndustry) {
+      console.log('🎯 Champion not found in accounts list, skipping auto-selection');
+      return;
+    }
+
+    // Buscar competitors que coincidan en industry (máximo 10)
+    const industryCompetitors = accounts
+      .filter(account => 
+        account.id !== championId && // Excluir el champion
+        account.industry && // Debe tener industry
+        championWithIndustry.industry && // Champion debe tener industry
+        account.industry === championWithIndustry.industry // Mismo industry
+      )
+      .slice(0, 10); // Máximo 10 competitors
+
+    if (industryCompetitors.length > 0) {
+      console.log(`🎯 Found ${industryCompetitors.length} competitors in same industry:`, industryCompetitors.map(c => c.name));
+      
+      // Convertir a formato de competitors
+      const suggestedCompetitors = industryCompetitors.map(account => ({
+        id: account.id,
+        name: account.name,
+        domain: account.main_website_url || '',
+        isNew: false
+      }));
+
+      setCompetitors(suggestedCompetitors);
+      console.log('🎯 Auto-selected competitors:', suggestedCompetitors.map(c => c.name));
+    } else {
+      console.log('🎯 No competitors found in same industry, keeping empty list');
+    }
+  };
+
+  // Función para cargar accounts y champion
+  const loadAccountsAndChampion = async () => {
+    try {
+      console.log('🎯 Starting parallel load: accounts + champion search');
+      
+      // 1. Buscar champion específico por dominio (rápido)
+      if (userProfile?.domain && !championId) {
+        console.log('🎯 Searching for champion by domain:', userProfile.domain);
+        const { data: championAccounts, error: championError } = await databaseService.findAccountsByDomain(userProfile.domain);
+        
+        if (!championError && championAccounts && championAccounts.length > 0) {
+          const championAccount = championAccounts[0];
+          console.log('🎯 Champion found immediately:', championAccount.name);
+          console.log('🎯 Champion account details:', {
+            id: championAccount.id,
+            name: championAccount.name,
+            url: championAccount.main_website_url
+          });
+          
+          setChampionId(championAccount.id);
+          setAutoPopulatedChampion(championAccount);
+          
+          // Agregar la cuenta del champion a la lista de accounts para que esté disponible en el dropdown
+          setAccounts(prev => {
+            const exists = prev.some(acc => acc.id === championAccount.id);
+            if (!exists) {
+              console.log('🎯 Adding champion account to accounts list for dropdown');
+              return [...prev, championAccount];
+            }
+            return prev;
+          });
+
+          // Obtener sugerencias de Clay usando el nombre del account champion
+          await getClaySuggestions(userProfile.domain, championAccount.name);
+        } else if (!championError && userProfile.domain) {
+          // Crear nueva cuenta si no existe
+          console.log('🎯 Creating new champion account for domain:', userProfile.domain);
+          const newAccount = {
+            name: userProfile.domain.charAt(0).toUpperCase() + userProfile.domain.slice(1),
+            main_website_url: `https://${userProfile.domain}`,
+            is_actively_tracked: false,
+            industry: 'Technology'
+          };
+          
+          const { data: createdAccount, error: createError } = await databaseService.createAccount(newAccount);
+          if (!createError && createdAccount) {
+            setChampionId(createdAccount.id);
+            setAutoPopulatedChampion(createdAccount);
+            
+            // Agregar la nueva cuenta del champion a la lista de accounts
+            setAccounts(prev => {
+              const exists = prev.some(acc => acc.id === createdAccount.id);
+              if (!exists) {
+                console.log('🎯 Adding new champion account to accounts list for dropdown');
+                return [...prev, createdAccount];
+              }
+              return prev;
+            });
+            
+            console.log('🎯 New champion account created:', createdAccount.name);
+
+            // Obtener sugerencias de Clay usando el nombre del nuevo account champion
+            await getClaySuggestions(userProfile.domain, createdAccount.name);
+          }
+        }
+      }
+      
+      // 2. Cargar TODAS las cuentas sin paginación (para el dropdown)
+      console.log('🎯 Loading ALL accounts for dropdown (no pagination)...');
+      const { data: allAccounts, error: accountsError, total: totalAccounts } = await databaseService.getAllAccounts();
+      if (!accountsError && allAccounts) {
+        console.log('🎯 Successfully loaded', allAccounts.length, 'accounts out of', totalAccounts, 'total');
+        
+        setAccounts(prev => {
+          // Combinar cuentas existentes (incluyendo champion) con TODAS las cuentas
+          const combined = [...prev, ...allAccounts];
+          const unique = combined.filter((acc, index, self) => 
+            index === self.findIndex(a => a.id === acc.id)
+          );
+          console.log('🎯 Combined accounts (champion + ALL):', unique.length, 'accounts out of', totalAccounts, 'total');
+          return unique;
+        });
+      } else {
+        console.error('🎯 Error loading all accounts:', accountsError);
+      }
+      
+    } catch (error) {
+      console.error('Error in parallel load:', error);
+    }
+  };
 
   // Load accounts and auto-populate champion in parallel
   useEffect(() => {
     if (!isOpen) return; // Solo ejecutar cuando el modal esté abierto
     
-    const loadAccountsAndChampion = async () => {
-      try {
-        console.log('🎯 Starting parallel load: accounts + champion search');
-        
-        // 1. Buscar champion específico por dominio (rápido)
-        if (userProfile?.domain && !championId) {
-          console.log('🎯 Searching for champion by domain:', userProfile.domain);
-          const { data: championAccounts, error: championError } = await databaseService.findAccountsByDomain(userProfile.domain);
-          
-          if (!championError && championAccounts && championAccounts.length > 0) {
-            const championAccount = championAccounts[0];
-            console.log('🎯 Champion found immediately:', championAccount.name);
-            console.log('🎯 Champion account details:', {
-              id: championAccount.id,
-              name: championAccount.name,
-              url: championAccount.main_website_url
-            });
-            
-            setChampionId(championAccount.id);
-            setAutoPopulatedChampion(championAccount);
-            
-            // Agregar la cuenta del champion a la lista de accounts para que esté disponible en el dropdown
-            setAccounts(prev => {
-              const exists = prev.some(acc => acc.id === championAccount.id);
-              if (!exists) {
-                console.log('🎯 Adding champion account to accounts list for dropdown');
-                return [...prev, championAccount];
-              }
-              return prev;
-            });
-          } else if (!championError && userProfile.domain) {
-            // Crear nueva cuenta si no existe
-            console.log('🎯 Creating new champion account for domain:', userProfile.domain);
-            const newAccount = {
-              name: userProfile.domain.charAt(0).toUpperCase() + userProfile.domain.slice(1),
-              main_website_url: `https://${userProfile.domain}`,
-              is_actively_tracked: false,
-              industry: 'Technology'
-            };
-            
-            const { data: createdAccount, error: createError } = await databaseService.createAccount(newAccount);
-            if (!createError && createdAccount) {
-              setChampionId(createdAccount.id);
-              setAutoPopulatedChampion(createdAccount);
-              
-              // Agregar la nueva cuenta del champion a la lista de accounts
-              setAccounts(prev => {
-                const exists = prev.some(acc => acc.id === createdAccount.id);
-                if (!exists) {
-                  console.log('🎯 Adding new champion account to accounts list for dropdown');
-                  return [...prev, createdAccount];
-                }
-                return prev;
-              });
-              
-              console.log('🎯 New champion account created:', createdAccount.name);
-            }
-          }
-        }
-        
-        // 2. Cargar TODAS las cuentas sin paginación (para el dropdown)
-        console.log('🎯 Loading ALL accounts for dropdown (no pagination)...');
-        const { data: allAccounts, error: accountsError, total: totalAccounts } = await databaseService.getAllAccounts();
-        if (!accountsError && allAccounts) {
-          console.log('🎯 Successfully loaded', allAccounts.length, 'accounts out of', totalAccounts, 'total');
-          
-          setAccounts(prev => {
-            // Combinar cuentas existentes (incluyendo champion) con TODAS las cuentas
-            const combined = [...prev, ...allAccounts];
-            const unique = combined.filter((acc, index, self) => 
-              index === self.findIndex(a => a.id === acc.id)
-            );
-            console.log('🎯 Combined accounts (champion + ALL):', unique.length, 'accounts out of', totalAccounts, 'total');
-            return unique;
-          });
-        } else {
-          console.error('🎯 Error loading all accounts:', accountsError);
-        }
-        
-      } catch (error) {
-        console.error('Error in parallel load:', error);
-      }
-    };
-
     loadAccountsAndChampion();
-  }, [isOpen, userProfile?.domain, championId]);
+  }, [isOpen, userProfile?.domain]);
 
-  // Monitor championId changes ONLY when modal is open
+  // Monitor championId changes and get Clay suggestions when champion changes
   useEffect(() => {
-    if (!isOpen) return; // Solo ejecutar cuando el modal esté abierto
+    if (!isOpen || !championId || !userProfile?.domain) return; // Solo ejecutar cuando el modal esté abierto y haya un champion
     
-    console.log('🎯 championId changed to:', championId);
-    if (championId) {
-      const found = accounts.find(acc => acc.id === championId);
-      console.log('🎯 Found account for championId:', found?.name || 'NOT FOUND');
-      console.log('🎯 Available accounts:', accounts.map(acc => ({ id: acc.id, name: acc.name })));
-      console.log('🎯 Looking for championId:', championId);
+    // Encontrar el account del champion seleccionado
+    const championAccount = accounts.find(acc => acc.id === championId);
+    if (championAccount) {
+      console.log('🎯 Champion changed to:', championAccount.name, 'Getting new Clay suggestions...');
+      // Obtener sugerencias de Clay usando el nombre del nuevo account champion
+      getClaySuggestions(userProfile.domain, championAccount.name);
     }
-  }, [championId, accounts, isOpen]);
+  }, [championId, isOpen, userProfile?.domain]); // Removido 'accounts' de las dependencias
+
+  // Auto-preseleccionar competitors cuando se cargan las cuentas y hay un champion seleccionado
+  useEffect(() => {
+    if (!isOpen || !championId || !userProfile || accounts.length === 0 || competitors.length > 0) return;
+    
+    const championAccount = accounts.find(acc => acc.id === championId);
+    if (championAccount) {
+      console.log('🎯 Accounts loaded, auto-selecting competitors for champion:', championAccount.name);
+      autoSelectCompetitorsByIndustry(championAccount);
+    }
+  }, [accounts, championId, isOpen, userProfile, competitors.length]);
+
+
 
 
 
@@ -453,6 +564,10 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
 
   const selectedChampion = accounts.find(acc => acc.id === championId);
   
+  // Verificar si hay empresas "NEW" seleccionadas
+  const hasNewCompanies = competitors.some(comp => comp.isNew);
+  const newCompaniesCount = competitors.filter(comp => comp.isNew).length;
+  
   // Debug logs para el champion selection
   console.log('🎯 Champion Selection Debug:', {
     championId,
@@ -463,35 +578,30 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
     accountsCount: accounts.length,
     filteredAccountsCount: filteredAccounts.length,
     accounts: accounts.map(acc => ({ id: acc.id, name: acc.name })),
-    isChampionIdInAccounts: accounts.some(acc => acc.id === championId)
+    isChampionIdInAccounts: accounts.some(acc => acc.id === championId),
+    hasNewCompanies,
+    newCompaniesCount
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <TooltipProvider delayDuration={300} skipDelayDuration={100}>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Configure Benchmark Analysis</DialogTitle>
+          <InfoTooltip content="Configure your benchmark by selecting a champion company and adding competitors. We'll analyze publication performance, speed, SERP positioning, and efficiency scores to give you actionable insights.">
+            <DialogTitle className="text-xl font-bold">Configure Benchmark Analysis</DialogTitle>
+          </InfoTooltip>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Instructions */}
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h4 className="font-semibold text-blue-900 mb-2">📋 How to Configure Your Benchmark</h4>
-            <div className="text-sm text-blue-800 space-y-1">
-              <p>• <strong>Champion:</strong> Select your main company to benchmark against</p>
-              <p>• <strong>Competitors:</strong> Add up to 10 companies to compare (existing accounts or new domains)</p>
-              <p>• <strong>Analysis:</strong> We'll compare publications, speed, SERP position, and efficiency scores</p>
-            </div>
-          </div>
 
           {/* Champion Selection */}
           <div className="space-y-3">
-            <Label htmlFor="champion" className="text-base font-medium">
-              Select Champion Company *
-            </Label>
-            <p className="text-sm text-gray-600">
-              Choose the company you want to use as the baseline for comparison. This will be highlighted as the "champion" in the results.
-            </p>
+            <InfoTooltip content="Choose the company you want to use as the baseline for comparison. This will be highlighted as the 'champion' in the results and used to measure performance against competitors.">
+              <Label htmlFor="champion" className="text-base font-medium">
+                Select Champion Company *
+              </Label>
+            </InfoTooltip>
             
             {/* Search Input */}
             <div className="space-y-2">
@@ -591,22 +701,17 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
 
           {/* Competitors Section */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <InfoTooltip content="Add companies to compare against your champion. You can select from existing accounts with historical data or add new ones by domain. Maximum 10 competitors allowed.">
               <Label className="text-base font-medium">
                 Add Competitors ({competitors.length}/10)
               </Label>
-            </div>
-            
-            <p className="text-sm text-gray-600">
-              Add companies to compare against your champion. You can select from existing accounts or add new ones by domain.
-            </p>
+            </InfoTooltip>
 
             {/* Add Existing Competitor */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Add from existing accounts</Label>
-              <p className="text-xs text-gray-500">
-                Select from companies already in our database with historical data
-              </p>
+              <InfoTooltip content="Select from companies already in our database with historical data. These accounts have existing performance metrics and publication history.">
+                <Label className="text-sm font-medium">Add from existing accounts</Label>
+              </InfoTooltip>
               
               {/* Competitor Search Input */}
               <div className="space-y-2">
@@ -649,13 +754,14 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
 
             {/* Add New Competitor */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Add new competitor by domain</Label>
-              <p className="text-xs text-gray-500">
-                Add a new company by entering their domain (e.g., company.com). We'll track their performance going forward.
-              </p>
+              <InfoTooltip content="Add a new company by entering their domain (e.g., company.com). We'll create a new account and start tracking their performance going forward.">
+                <Label className="text-sm font-medium">Add new competitor by domain</Label>
+              </InfoTooltip>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="newName" className="text-xs">Company Name</Label>
+                  <InfoTooltip content="Enter the official company name as it appears on their website or in business directories.">
+                    <Label htmlFor="newName" className="text-xs">Company Name</Label>
+                  </InfoTooltip>
                   <Input
                     id="newName"
                     value={newName}
@@ -664,7 +770,9 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="newDomain" className="text-xs">Domain</Label>
+                  <InfoTooltip content="Enter the company's main domain (e.g., company.com). This will be used to track their website and publications.">
+                    <Label htmlFor="newDomain" className="text-xs">Domain</Label>
+                  </InfoTooltip>
                   <Input
                     id="newDomain"
                     value={newDomain}
@@ -698,10 +806,16 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
             {/* Competitors List */}
             {competitors.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Selected Competitors</Label>
-                <p className="text-xs text-gray-500">
-                  Review your selected competitors. Click the X to remove any you don't want to include.
-                </p>
+                <div className="flex items-center gap-2">
+                  <InfoTooltip content="Review your selected competitors. Click the X to remove any you don't want to include in the benchmark analysis.">
+                    <Label className="text-sm font-medium">Selected Competitors</Label>
+                  </InfoTooltip>
+                  {competitors.length > 0 && !competitors.some(c => c.isNew) && (
+                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
+                      Auto-selected by industry
+                    </Badge>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {competitors.map((competitor, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -725,6 +839,35 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
                     </div>
                   ))}
                 </div>
+                {competitors.length > 0 && !competitors.some(c => c.isNew) && (
+                  <p className="text-xs text-blue-600 italic">
+                    💡 Competitors were auto-selected based on industry match. You can remove or add others as needed.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Contextual Message for NEW Companies */}
+            {hasNewCompanies && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
+                      <span className="text-amber-600 text-sm">⏱️</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-amber-800 mb-1">
+                      New Company Analysis
+                    </h4>
+                    <p className="text-sm text-amber-700 leading-relaxed">
+                      {newCompaniesCount === 1 
+                        ? "New analyses can take up to 30 minutes. We'll reach out when your report is ready."
+                        : `${newCompaniesCount} new companies selected. New analyses can take up to 30 minutes. We'll reach out when your report is ready.`
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -732,10 +875,11 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
           {/* Actions */}
           <div className="space-y-3 pt-4">
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <strong>Ready to analyze?</strong> We'll compare your champion against {competitors.length} competitor {competitors.length !== 1 ? 's' : ''} 
-                 using real performance data from the last 30 days.
-              </p>
+              <InfoTooltip content={`We'll compare your champion against ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''} using real performance data from the last 30 days, including publication metrics, SERP positioning, and efficiency scores.`}>
+                <p className="text-sm text-gray-600">
+                  <strong>Ready to analyze?</strong> Champion vs {competitors.length} competitor{competitors.length !== 1 ? 's' : ''} 
+                </p>
+              </InfoTooltip>
             </div>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={onClose}>
@@ -751,6 +895,7 @@ export const BenchmarkConfigModal: React.FC<BenchmarkConfigModalProps> = ({
             </div>
           </div>
         </div>
+        </TooltipProvider>
       </DialogContent>
     </Dialog>
   );

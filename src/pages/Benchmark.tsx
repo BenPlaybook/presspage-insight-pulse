@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { databaseService } from '@/services/databaseService';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 
 
 const Benchmark = () => {
   const { userProfile } = useAuthContext();
+  const [searchParams] = useSearchParams();
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
@@ -26,6 +28,22 @@ const Benchmark = () => {
     title: "Unlock Full Competitor Insights",
     description: "Get access to detailed competitor data and export features by contacting our sales team."
   });
+
+  // Check if this is an external user with URL parameters
+  const isExternalUser = !userProfile && (searchParams.get('name') || searchParams.get('industry') || searchParams.get('domain'));
+  const externalParams = {
+    name: searchParams.get('name'),
+    industry: searchParams.get('industry'),
+    domain: searchParams.get('domain')
+  };
+
+  // Auto-start benchmark for external users
+  React.useEffect(() => {
+    if (isExternalUser && externalParams.name && externalParams.industry) {
+      console.log('🎯 External user detected, auto-starting benchmark with params:', externalParams);
+      handleExternalBenchmark();
+    }
+  }, [isExternalUser, externalParams.name, externalParams.industry]);
 
   // Listen for header export click
   React.useEffect(() => {
@@ -40,6 +58,65 @@ const Benchmark = () => {
     window.addEventListener('openContactSales', handleExportClick as EventListener);
     return () => window.removeEventListener('openContactSales', handleExportClick as EventListener);
   }, []);
+
+  // Handle external user benchmark (auto-configured)
+  const handleExternalBenchmark = async () => {
+    setLoading(true);
+    
+    try {
+      console.log('🎯 Starting external benchmark for:', externalParams);
+      
+      // Find or create champion account
+      let championAccount = null;
+      
+      // First, try to find existing account by domain
+      if (externalParams.domain) {
+        const { data: existingAccounts } = await databaseService.findAccountsByDomain(externalParams.domain);
+        if (existingAccounts && existingAccounts.length > 0) {
+          championAccount = existingAccounts[0];
+          console.log('🎯 Found existing champion account:', championAccount);
+        }
+      }
+      
+      // If no existing account found, create a mock champion
+      if (!championAccount) {
+        championAccount = {
+          id: `external-champion-${Date.now()}`,
+          name: externalParams.name || 'External Company',
+          main_website_url: externalParams.domain || '',
+          industry: externalParams.industry || 'Unknown'
+        };
+        console.log('🎯 Created mock champion account:', championAccount);
+      }
+      
+      // Find competitors by industry
+      const { data: allAccounts } = await databaseService.getAllAccounts();
+      const industryCompetitors = allAccounts?.filter(account => 
+        account.industry === externalParams.industry && 
+        account.id !== championAccount.id
+      ).slice(0, 15) || [];
+      
+      console.log('🎯 Found competitors by industry:', industryCompetitors.length);
+      
+      // Create benchmark config
+      const config = {
+        championId: championAccount.id,
+        competitors: industryCompetitors.map(account => ({
+          id: account.id,
+          name: account.name,
+          domain: account.main_website_url
+        }))
+      };
+      
+      // Start benchmark with auto-configured data
+      await handleStartBenchmark(config);
+      
+    } catch (error) {
+      console.error('Error in external benchmark:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle benchmark configuration
   const handleStartBenchmark = async (config: any) => {
@@ -169,16 +246,29 @@ const Benchmark = () => {
             <div className="text-center py-8">
               <div className="mb-6">
                 <Crown className="w-16 h-16 text-presspage-teal mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Configure Your Benchmark</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {isExternalUser ? 'Loading Your Benchmark Analysis' : 'Configure Your Benchmark'}
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  Select a champion company and add up to 10 competitors to compare performance metrics
+                  {isExternalUser 
+                    ? `Analyzing ${externalParams.name} against competitors in the ${externalParams.industry} industry...`
+                    : 'Select a champion company and add up to 10 competitors to compare performance metrics'
+                  }
                 </p>
-                <Button
-                  onClick={() => setConfigModalOpen(true)}
-                  className="bg-presspage-teal hover:bg-presspage-teal/90 text-white px-6 py-3"
-                >
-                  Start Benchmark Analysis
-                </Button>
+                {!isExternalUser && (
+                  <Button
+                    onClick={() => setConfigModalOpen(true)}
+                    className="bg-presspage-teal hover:bg-presspage-teal/90 text-white px-6 py-3"
+                  >
+                    Start Benchmark Analysis
+                  </Button>
+                )}
+                {isExternalUser && loading && (
+                  <div className="flex items-center justify-center gap-2 text-presspage-teal">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-presspage-teal"></div>
+                    <span>Loading benchmark data...</span>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -197,13 +287,15 @@ const Benchmark = () => {
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setConfigModalOpen(true)}
-                  size="sm"
-                >
-                  Reconfigure
-                </Button>
+                {!isExternalUser && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setConfigModalOpen(true)}
+                    size="sm"
+                  >
+                    Reconfigure
+                  </Button>
+                )}
               </div>
 
               {/* Benchmark Table */}

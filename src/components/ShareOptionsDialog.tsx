@@ -18,6 +18,8 @@ type ShareOptionsDialogProps = {
   accountId: string;
   summaryId: string;
   accountName: string;
+  industry?: string;
+  domain?: string;
   summaryType: 'internal' | 'customer';
   summaryContent: string;
   internalContent?: string;
@@ -41,6 +43,8 @@ export const ShareOptionsDialog = ({
   accountId,
   summaryId,
   accountName,
+  industry,
+  domain,
   summaryType,
   summaryContent,
   internalContent,
@@ -55,8 +59,16 @@ export const ShareOptionsDialog = ({
     setIsSharingLink(true);
     
     try {
-      // Generate simple URL for shared view
-      const shareUrl = `https://presspage-insight-pulse.lovable.app/account/${accountId}`;
+      // Generate URL with parameters for shared view
+      const baseUrl = `https://presspage-insight-pulse.lovable.app/account/${accountId}`;
+      const params = new URLSearchParams();
+      
+      // Add parameters if they exist
+      if (accountName) params.append('name', accountName);
+      if (industry) params.append('industry', industry);
+      if (domain) params.append('domain', domain);
+      
+      const shareUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
       
       // Copy to clipboard
       await navigator.clipboard.writeText(shareUrl);
@@ -75,6 +87,9 @@ export const ShareOptionsDialog = ({
           summaryType,
           summaryContent,
           prHealthData,
+          accountName,
+          industry,
+          domain,
           timestamp: new Date().toISOString(),
           action: 'share_link',
         }),

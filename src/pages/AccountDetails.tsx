@@ -133,7 +133,7 @@ const AccountDetails = () => {
     loadAccountData();
   }, [id]);
 
-  // Convert account data to frontend format
+  // Convert account data to frontend format using the same adapter as dashboard
   const accountData = account ? {
     id: account.id,
     name: account.name,
@@ -255,7 +255,7 @@ const AccountDetails = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <Header variant="account" title={accountData.name} />
       
       <main className="container mx-auto px-4 py-6 pb-32">
@@ -264,6 +264,7 @@ const AccountDetails = () => {
           url={accountData.url}
           status={accountData.status}
           lastAnalyzed={accountData.lastAnalyzed}
+          industry={account?.industry || 'N/A'}
           performanceScore={accountData.performanceScore}
         />
         
@@ -274,6 +275,8 @@ const AccountDetails = () => {
             accountId={id || '1'}
             summaryId={`summary-${id || '1'}-${Date.now()}`}
             accountName={accountData.name}
+            industry={account?.industry}
+            domain={account?.main_website_url}
             aiSummary={extractTextFromJSONB(account?.ai_performance_summary)}
             customerAiSummary={extractTextFromJSONB(account?.customer_ai_summary)}
           />

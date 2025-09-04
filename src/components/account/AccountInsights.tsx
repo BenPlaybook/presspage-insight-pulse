@@ -15,6 +15,8 @@ type AccountInsightsProps = {
   accountId: string;
   summaryId: string;
   accountName?: string;
+  industry?: string;
+  domain?: string;
   aiSummary?: any;
   customerAiSummary?: any;
   prHealthData?: {
@@ -38,6 +40,8 @@ const AccountInsights = ({
   accountId, 
   summaryId, 
   accountName = "Account", 
+  industry,
+  domain,
   aiSummary, 
   customerAiSummary,
   prHealthData,
@@ -327,6 +331,8 @@ const AccountInsights = ({
          accountId={accountId}
          summaryId={summaryId}
          accountName={accountName}
+         industry={industry}
+         domain={domain}
          summaryType={activeVersion as 'internal' | 'customer'}
          summaryContent={activeVersion === 'internal' 
            ? (aiSummary || internalSummary) 

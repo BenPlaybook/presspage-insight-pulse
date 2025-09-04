@@ -49,11 +49,7 @@ const App = () => (
                 <PublicationDetails />
               </ProtectedRoute>
             } />
-            <Route path="/benchmark" element={
-              <ProtectedRoute>
-                <Benchmark />
-              </ProtectedRoute>
-            } />
+            <Route path="/benchmark" element={<Benchmark />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />

@@ -29,6 +29,7 @@ export const AccountHeaderWrapper: React.FC<AccountHeaderWrapperProps> = ({
         url={account.main_website_url}
         status={account.is_actively_tracked ? 'Active' : 'Processing'}
         lastAnalyzed="Coming Soon"
+        industry={account.industry}
         healthScore={healthScore}
         disableInteractions={disableInteractions}
       />

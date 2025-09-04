@@ -5,7 +5,7 @@ export interface Account {
   name: string;
   main_website_url: string;
   logo_url?: string; // URL del logo de la empresa
-  industry: string;
+  industry?: string;
   pr_comms_headcount: number;
   is_actively_tracked: boolean;
   ai_performance_summary: string;

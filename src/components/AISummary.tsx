@@ -12,11 +12,13 @@ type AISummaryProps = {
   accountId: string;
   summaryId: string;
   accountName?: string;
+  industry?: string;
+  domain?: string;
   aiSummary?: any; // JSONB field from Supabase
   customerAiSummary?: any; // JSONB field for customer summary from accounts
 };
 
-const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, accountName = "Account", aiSummary, customerAiSummary }: AISummaryProps) => {
+const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, accountName = "Account", industry, domain, aiSummary, customerAiSummary }: AISummaryProps) => {
   const [activeVersion, setActiveVersion] = React.useState<string>('internal');
   const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
 
@@ -90,6 +92,8 @@ const AISummary = ({ internalSummary, customerSummary, accountId, summaryId, acc
         accountId={accountId}
         summaryId={summaryId}
         accountName={accountName}
+        industry={industry}
+        domain={domain}
         summaryType={activeVersion as 'internal' | 'customer'}
         summaryContent={activeVersion === 'internal' 
           ? (aiSummary || internalSummary) 

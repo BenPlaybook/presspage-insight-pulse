@@ -8,6 +8,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/clay': {
+        target: 'https://api.clay.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/clay/, ''),
+        secure: true,
+      }
+    }
   },
   plugins: [
     react(),

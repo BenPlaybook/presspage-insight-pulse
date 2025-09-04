@@ -218,11 +218,8 @@ const PublicAccountDetails = () => {
       <main className="container mx-auto px-4 py-8">
                  {/* Account Header */}
          <AccountHeaderWrapper 
-           name={account.name || "Vinted"}
-           url={account.main_website_url || "https://vinted.com"}
-           status="Active"
-           lastAnalyzed="Coming Soon"
-                       healthScore={(() => {
+           account={account}
+           healthScore={(() => {
               // Calcular score global basado en métricas reales
               const scores = [
                 prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
@@ -247,7 +244,7 @@ const PublicAccountDetails = () => {
               
               return Math.round(averageScore);
             })()}
-           disableInteractions={!user} // Disable interactions for non-authenticated users
+           disableInteractions={!user}
          />
         
         {/* Account Metrics */}
@@ -283,6 +280,8 @@ const PublicAccountDetails = () => {
              accountId={id || '1'}
              summaryId={`summary-${id || '1'}-${Date.now()}`}
              accountName={account?.name || 'Account'}
+             industry={account?.industry}
+             domain={account?.main_website_url}
              aiSummary={account?.ai_performance_summary}
              customerAiSummary={account?.customer_ai_summary}
              prHealthData={{
