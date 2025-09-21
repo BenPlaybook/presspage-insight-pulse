@@ -18,6 +18,7 @@ const fallbackAccounts: Account[] = [
     dateAdded: '2024-01-15',
     industry: 'E-commerce',
     headcount: 12,
+    isNew: false,
     publications: {
       financial: {
         last30Days: 5,
@@ -38,6 +39,7 @@ const fallbackAccounts: Account[] = [
     dateAdded: '2024-02-01',
     industry: 'Automotive',
     headcount: 8,
+    isNew: false,
     publications: {
       financial: {
         last30Days: 3,
@@ -58,6 +60,7 @@ const fallbackAccounts: Account[] = [
     dateAdded: '2024-03-10',
     industry: 'Automotive',
     headcount: 10,
+    isNew: true,
     publications: {
       financial: {
         last30Days: 2,
@@ -78,6 +81,7 @@ const fallbackAccounts: Account[] = [
     dateAdded: '2024-04-05',
     industry: 'Automotive',
     headcount: 15,
+    isNew: false,
     publications: {
       financial: {
         last30Days: 4,
@@ -98,6 +102,7 @@ const fallbackAccounts: Account[] = [
     dateAdded: '2024-05-01',
     industry: 'Technology',
     headcount: 12,
+    isNew: true,
     publications: {
       financial: {
         last30Days: 1,
@@ -163,6 +168,15 @@ export const AccountsTable = ({ accounts = fallbackAccounts }: AccountsTableProp
                   financial={account.publications.financial.last30Days}
                   nonFinancial={account.publications.nonFinancial.last30Days}
                 />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center">
+                {account.isNew ? (
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 border-green-300">
+                    NEW
+                  </Badge>
+                ) : (
+                  <span className="text-gray-400 text-xs">-</span>
+                )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <Link to={`/account/${account.id}`} className="bg-presspage-teal text-white px-3 py-1 rounded text-xs">

@@ -131,12 +131,19 @@ const Benchmark = () => {
       const competitorsData = await Promise.all(
         config.competitors.map(async (competitor: any) => {
           if (competitor.id) {
-            return await loadAccountMetrics(competitor.id);
+            const accountData = await loadAccountMetrics(competitor.id);
+            return {
+              ...accountData,
+              isNew: competitor.isNew,
+              domain: competitor.domain
+            };
           } else {
             // For new competitors, generate mock data
             return {
               id: `new-${Date.now()}`,
               name: competitor.name,
+              domain: competitor.domain,
+              isNew: competitor.isNew,
               metrics: generateMockMetrics(competitor.name)
             };
           }
@@ -156,6 +163,20 @@ const Benchmark = () => {
     }
   };
 
+  // Helper function to safely extract domain from URL
+  const extractDomain = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    
+    try {
+      // Add protocol if missing
+      const urlWithProtocol = url.startsWith('http') ? url : `https://${url}`;
+      return new URL(urlWithProtocol).hostname;
+    } catch (error) {
+      console.warn('Invalid URL format:', url);
+      return null;
+    }
+  };
+
   // Load account metrics
   const loadAccountMetrics = async (accountId: string) => {
     try {
@@ -171,6 +192,7 @@ const Benchmark = () => {
         return {
           id: accountId,
           name: account.data?.name || 'Unknown',
+          domain: extractDomain(account.data?.main_website_url),
           metrics: generateMockMetrics(account.data?.name || 'Unknown')
         };
       }
@@ -189,6 +211,7 @@ const Benchmark = () => {
       return {
         id: accountId,
         name: account.data?.name || 'Unknown',
+        domain: extractDomain(account.data?.main_website_url),
         metrics: transformedMetrics
       };
     } catch (error) {
@@ -197,6 +220,7 @@ const Benchmark = () => {
       return {
         id: accountId,
         name: 'Unknown',
+        domain: null,
         metrics: generateMockMetrics('Unknown')
       };
     }
@@ -281,6 +305,11 @@ const Benchmark = () => {
                   <div>
                     <h3 className="font-semibold text-presspage-teal">
                       Champion: {benchmarkData.champion.name}
+                      {benchmarkData.champion.domain && (
+                        <span className="text-gray-500 font-normal ml-1">
+                          ({benchmarkData.champion.domain})
+                        </span>
+                      )}
                     </h3>
                     <p className="text-sm text-gray-600">
                       vs {benchmarkData.competitors.length} competitors
@@ -301,6 +330,23 @@ const Benchmark = () => {
               {/* Benchmark Table */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4">Performance Comparison</h3>
+                
+                {/* Note about new companies analysis time */}
+                {benchmarkData.competitors.some((competitor: any) => competitor.isNew) && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <div className="flex-shrink-0">
+                        <span className="text-amber-600 text-sm">⏱️</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-amber-800">
+                          <strong>New Account Analysis:</strong> For new accounts marked as "NEW", the analysis takes approximately 30 minutes to complete. We'll notify you when the data is ready.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -321,6 +367,11 @@ const Benchmark = () => {
                             <Crown className="w-4 h-4 text-presspage-teal" />
                             <span className="font-semibold text-presspage-teal">
                               {benchmarkData.champion.name}
+                              {benchmarkData.champion.domain && (
+                                <span className="text-gray-500 font-normal ml-1">
+                                  ({benchmarkData.champion.domain})
+                                </span>
+                              )}
                             </span>
                             <Badge variant="default" className="text-xs">Champion</Badge>
                           </div>
@@ -350,7 +401,21 @@ const Benchmark = () => {
                           onClick={() => handleCompetitorClick(competitor)}
                         >
                           <td className="py-3 px-4">
-                            <span className="font-medium">{competitor.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">
+                                {competitor.name}
+                                {competitor.domain && (
+                                  <span className="text-gray-500 font-normal ml-1">
+                                    ({competitor.domain})
+                                  </span>
+                                )}
+                              </span>
+                              {competitor.isNew && (
+                                <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 border-green-300">
+                                  NEW
+                                </Badge>
+                              )}
+                            </div>
                           </td>
                           <td className="text-center py-3 px-4">
                             {competitor.metrics.publications}
@@ -384,21 +449,7 @@ const Benchmark = () => {
               />
               
               {/* Overlay de bloqueo único para toda la pantalla */}
-              {userProfile && !userProfile.full_access && (
-                <div className="absolute inset-x-0 top-16 bottom-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-lg">
-                  <div className="text-center p-6">
-                    <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Unlock Competitor Insights</h3>
-                    <p className="text-gray-600 mb-4">Get full access to competitor data and analytics</p>
-                    <Button
-                      onClick={() => setContactDialogOpen(true)}
-                      className="bg-presspage-teal hover:bg-presspage-teal/90"
-                    >
-                      Contact Sales to Unlock
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Removed full_access restriction for logged-in users */}
             </div>
           )}
           

@@ -20,6 +20,9 @@ export const AccountsTableHeader = () => (
         Publications (30d)
       </th>
       <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+        NEW
+      </th>
+      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
         Actions
       </th>
     </tr>

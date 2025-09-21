@@ -12,9 +12,8 @@ interface ClayWebhookResponse {
 }
 
 export const clayService = {
-  /**
-   * Envía datos al webhook de Clay para obtener sugerencias de competitors
-   */
+
+   // Envía datos al webhook de Clay para obtener sugerencias de competitors
   async getCompetitorSuggestions(request: ClayWebhookRequest): Promise<ClayWebhookResponse> {
     try {
       console.log('🎯 Clay Service: Sending request to webhook:', request);
