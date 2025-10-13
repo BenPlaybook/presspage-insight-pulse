@@ -85,7 +85,7 @@ const PublicAccountDetails = () => {
                hasDistributionReach: !!metrics?.distributionReach,
                hasOrganicFindability: !!metrics?.organicFindability,
                publishingVelocityScore: metrics?.publishingVelocity?.scorePercentage,
-               distributionReachScore: metrics?.distributionReach?.scorePercentage,
+               distributionReachScore: metrics?.distributionReach?.totalScore,
                organicFindabilityScore: metrics?.organicFindability?.scorePercentage
              });
             
@@ -109,17 +109,13 @@ const PublicAccountDetails = () => {
               if (metrics?.distributionReach) {
                 console.log('🌐 Distribution Reach Calculation:', {
                   accountId: id,
-                  totalViews: metrics.distributionReach.totalViews.toLocaleString(),
-                  thirdPartyLocations: metrics.distributionReach.thirdPartyLocations,
-                  locationFactor: metrics.distributionReach.locationFactor.toLocaleString(),
-                  totalScore: metrics.distributionReach.totalScore.toLocaleString(),
-                  scorePercentage: `${metrics.distributionReach.scorePercentage}%`,
-                  locationsCount: metrics.distributionReach.locations.length,
-                  locations: metrics.distributionReach.locations.map(loc => ({
-                    sourceType: loc.sourceType,
-                    views: loc.views.toLocaleString(),
-                    locationName: loc.locationName
-                  }))
+                  totalScore: metrics.distributionReach.totalScore,
+                  ownedReach: metrics.distributionReach.ownedReach.toLocaleString(),
+                  earnedReach: metrics.distributionReach.earnedReach.toLocaleString(),
+                  ownedScore: metrics.distributionReach.ownedScore,
+                  earnedScore: metrics.distributionReach.earnedScore,
+                  uniquePickupDomains: metrics.distributionReach.uniquePickupDomains,
+                  totalPickups: metrics.distributionReach.totalPickups
                 });
               }
 
@@ -223,9 +219,9 @@ const PublicAccountDetails = () => {
               // Calcular score global basado en métricas reales
               const scores = [
                 prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
-                prHealthMetrics?.distributionReach?.scorePercentage || 0,
+                prHealthMetrics?.distributionReach?.totalScore || 0,
                 prHealthMetrics?.organicFindability?.scorePercentage || 0,
-                prHealthMetrics?.pickUpQuality?.scorePercentage || 0
+                prHealthMetrics?.pickUpQuality || 0
               ];
               
               // Filtrar scores válidos (mayores a 0)
@@ -289,9 +285,9 @@ const PublicAccountDetails = () => {
                  // Calcular score global basado en métricas reales
                  const scores = [
                    prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
-                   prHealthMetrics?.distributionReach?.scorePercentage || 0,
+                   prHealthMetrics?.distributionReach?.totalScore || 0,
                    prHealthMetrics?.organicFindability?.scorePercentage || 0,
-                   prHealthMetrics?.pickUpQuality?.scorePercentage || 0
+                   prHealthMetrics?.pickUpQuality || 0
                  ];
                  
                  // Filtrar scores válidos (mayores a 0)
@@ -312,8 +308,8 @@ const PublicAccountDetails = () => {
                })(),
                metrics: {
                  publishingVelocity: prHealthMetrics?.publishingVelocity?.scorePercentage || 0,
-                 distributionReach: prHealthMetrics?.distributionReach?.scorePercentage || 0,
-                 pickupQuality: prHealthMetrics?.pickUpQuality?.scorePercentage || 0,
+                 distributionReach: prHealthMetrics?.distributionReach?.totalScore || 0,
+                 pickupQuality: prHealthMetrics?.pickUpQuality || 0,
                  organicFindability: prHealthMetrics?.organicFindability?.scorePercentage || 0,
                  competitorBenchmark: 0
                },
@@ -327,7 +323,7 @@ const PublicAccountDetails = () => {
                    }
                    
                    if (prHealthMetrics?.distributionReach) {
-                     parts.push(`Distribution Reach: ${prHealthMetrics.distributionReach.totalViews.toLocaleString()} total views across ${prHealthMetrics.distributionReach.thirdPartyLocations} third-party locations.`);
+                     parts.push(`Distribution Reach: ${prHealthMetrics.distributionReach.ownedReach.toLocaleString()} owned reach + ${prHealthMetrics.distributionReach.earnedReach.toLocaleString()} earned reach across ${prHealthMetrics.distributionReach.uniquePickupDomains} pickup domains.`);
                    }
                    
                    if (prHealthMetrics?.organicFindability) {
@@ -336,9 +332,9 @@ const PublicAccountDetails = () => {
                    
                    // Evaluar rendimiento general
                    const pvScore = prHealthMetrics?.publishingVelocity?.scorePercentage || 0;
-                   const drScore = prHealthMetrics?.distributionReach?.scorePercentage || 0;
+                   const drScore = prHealthMetrics?.distributionReach?.totalScore || 0;
                    const ofScore = prHealthMetrics?.organicFindability?.scorePercentage || 0;
-                   const puqScore = prHealthMetrics?.pickUpQuality?.scorePercentage || 0;
+                   const puqScore = prHealthMetrics?.pickUpQuality || 0;
                    
                    // Calcular score promedio para la recomendación
                    const scores = [pvScore, drScore, ofScore, puqScore];

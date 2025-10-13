@@ -121,21 +121,3 @@ export interface PublicationRelationshipsResponse {
   data: PublicationRelationship[];
   error: any;
 }
-
-export interface PickUpQualityData {
-  accountId: string;
-  averagePickUpQuality: number;
-  totalPickUpQuality: number;
-  publicationsWithPickups: number;
-  totalPublications: number;
-  normalizedScore: number;
-  scorePercentage: number;
-  pickUpDetails: Array<{
-    publicationId: string;
-    pickUpScore: number;
-    thirdPartyCount: number;
-    totalAudience: number;
-    averageFit: number;
-  }>;
-  calculationDate: string;
-} 
